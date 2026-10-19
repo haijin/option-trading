@@ -1,0 +1,1 @@
+ALTER TABLE "pricing_calibration" ADD COLUMN "iv_rv_ratio" numeric(10, 6);

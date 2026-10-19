@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Leaders at Support</title>
+<meta name="description" content="Option_Trading Leaders page prototype: a daily shortlist of up to twenty HK and US market leaders that pulled back to support (Martin Luk pullback method), with reasons, KPIs, a stop-first trade plan, the app's own forward record and a hand-off to the research skills. Static sample data, illustrative numbers." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* Tokens copied from docs/prototypes/latest-news.html so this matches the live app (WhatsApp-style restyle of 2026-10-11). */
+:root {
+  color-scheme: light;
+  --bg:#f7f8fa; --panel:#fff; --panel2:#f0f2f5; --ink:#111b21; --ink2:#3b4a54; --muted:#54656f; --faint:#667781; --dim:#8696a0;
+  --line:#e9edef; --line2:#d1d7db; --brand:#25d366; --brand-dark:#128c7e; --brand-deep:#075e54; --brand-soft:#dcf8c6;
+  --accent:#128c7e; --accentbg:#d4f7df;
+  --ok:#075e54; --okbg:rgba(37,211,102,.16); --warn:#856404; --warnbg:#fff3c4; --fail:#c5221f; --failbg:#fde8e6;
+  --blue:#0086cb; --bluebg:rgba(52,183,241,.16); --chip:#f0f2f5;
+  --shadow:0 1px 1px rgba(0,0,0,.04),0 1px 3px rgba(11,20,26,.06);
+  --r-sm:6px; --r-md:8px; --r-lg:12px; --tabbar:62px;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --sans:"Inter",-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  color-scheme:dark; --bg:#0b141a; --panel:#111b21; --panel2:#202c33; --ink:#e9edef; --ink2:#d1d7db; --muted:#aebac1; --faint:#8696a0; --dim:#667781;
+  --line:#222d34; --line2:#2a3942; --brand:#00a884; --brand-dark:#00a884; --brand-deep:#005c4b; --brand-soft:#005c4b; --accent:#00a884; --accentbg:#103a31;
+  --ok:#4cd18c; --okbg:#0f2f27; --warn:#f5c542; --warnbg:#3a2e0a; --fail:#f8766d; --failbg:#3b1a1e;
+  --blue:#53bdeb; --bluebg:#12303d; --chip:#202c33; --shadow:none; } }
+:root[data-theme="dark"] {
+  color-scheme:dark; --bg:#0b141a; --panel:#111b21; --panel2:#202c33; --ink:#e9edef; --ink2:#d1d7db; --muted:#aebac1; --faint:#8696a0; --dim:#667781;
+  --line:#222d34; --line2:#2a3942; --brand:#00a884; --brand-dark:#00a884; --brand-deep:#005c4b; --brand-soft:#005c4b; --accent:#00a884; --accentbg:#103a31;
+  --ok:#4cd18c; --okbg:#0f2f27; --warn:#f5c542; --warnbg:#3a2e0a; --fail:#f8766d; --failbg:#3b1a1e;
+  --blue:#53bdeb; --bluebg:#12303d; --chip:#202c33; --shadow:none; }
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--sans);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+a{color:inherit;text-decoration:none}
+button{font:inherit;border:0;background:none;color:inherit;cursor:pointer;padding:0}
+button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.num{font-variant-numeric:tabular-nums}
+.mono{font-family:var(--mono)}
+svg{display:block}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+
+/* frame */
+.app{min-height:100dvh;display:flex;flex-direction:column}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--panel);border-bottom:1px solid var(--line);padding:12px 16px 10px}
+.top .row{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.top h1{margin:0;font-size:22px;font-weight:700;color:var(--brand-deep);letter-spacing:-.02em}
+.top .asof{font-size:12.5px;color:var(--faint);white-space:nowrap}
+.top .sub{margin-top:6px;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.top .tool{margin-left:auto;font-size:13px;color:var(--accent);font-weight:600;display:inline-flex;gap:5px;align-items:center;min-height:44px;padding:0 4px}
+.top .tool svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.regime{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--ok)}
+.regime .dot{width:8px;height:8px;border-radius:50%;background:var(--brand)}
+.regime.off{color:var(--warn)} .regime.off .dot{background:var(--warn)}
+.body{flex:1;padding:14px 16px calc(var(--tabbar) + 28px);display:grid;gap:14px;align-content:start}
+.body > *{min-width:0}
+@media (min-width: 900px){ .body{max-width:1120px;width:100%;margin:0 auto;grid-template-columns:1fr 1fr;gap:16px 18px} .span2{grid-column:1 / -1} }
+.tabbar{position:fixed;left:0;right:0;bottom:0;height:calc(var(--tabbar) + env(safe-area-inset-bottom,0px));background:var(--panel);border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:flex-start;padding:9px 0 env(safe-area-inset-bottom,0px);z-index:5}
+.tabbar a{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:500;color:var(--faint);min-width:44px;position:relative}
+.tabbar a.active{color:var(--brand-dark);font-weight:600}
+.tabbar svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabbar .badge{position:absolute;top:-4px;right:2px;min-width:17px;height:17px;padding:0 5px;border-radius:9px;background:var(--fail);color:#fff;font-size:10.5px;font-weight:700;display:grid;place-items:center}
+@media (max-width: 360px){ .tabbar a{font-size:9px} }
+
+/* cards */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:12px 14px}
+.card h2{margin:0 0 8px;font-size:13px;font-weight:700;color:var(--brand-deep);text-transform:uppercase;letter-spacing:.04em}
+.muted{color:var(--muted)} .faint{color:var(--faint)} .small{font-size:12.5px}
+
+/* funnel */
+.funnel{display:flex;gap:6px;align-items:stretch;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.funnel::-webkit-scrollbar{display:none}
+.stage{flex:1 0 auto;min-width:72px;min-height:56px;border:1px solid var(--line);border-radius:var(--r-md);padding:7px 9px;text-align:left;background:var(--panel2)}
+.stage .n{font-size:18px;font-weight:700;letter-spacing:-.02em}
+.stage .l{font-size:11px;color:var(--faint);line-height:1.2}
+.stage.sel{border-color:var(--accent);background:var(--accentbg)}
+.stage.last{background:var(--brand-soft);border-color:var(--brand)}
+.counts{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:12.5px;color:var(--muted)}
+.counts b{color:var(--ink)}
+
+/* day nav + filters */
+.daynav{display:flex;align-items:center;gap:6px}
+.daynav .arrow{width:44px;height:44px;display:grid;place-items:center;border-radius:50%;color:var(--accent)}
+.daynav .arrow svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.daynav .lbl{flex:1;text-align:center;font-weight:600}
+.daynav .lbl span{display:block;font-size:11.5px;font-weight:500;color:var(--faint)}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:0 10px;min-height:32px;border-radius:16px;background:var(--accentbg);color:var(--accent);font-size:12.5px;font-weight:600}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{min-height:38px;padding:0 11px;border-radius:8px;font-size:13px;font-weight:600;color:var(--muted)}
+.seg button.on{background:var(--panel);color:var(--brand-deep);box-shadow:var(--shadow)}
+.filters select{font:inherit;font-size:13px;font-weight:600;color:var(--muted);background:var(--panel2);border:1px solid var(--line);border-radius:10px;min-height:40px;padding:0 8px}
+.archive{background:var(--warnbg);color:var(--warn);border-radius:var(--r-md);padding:8px 12px;font-size:13px;display:none}
+.archive.on{display:block}
+
+/* candidate card */
+.cand{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
+.cand.setup{border-left:4px solid var(--brand)}
+.cand.watch{border-left:4px solid #f5c542}
+.cand .hd{display:flex;align-items:flex-start;gap:10px;padding:12px 14px 6px;width:100%;text-align:left}
+.cand .rank{width:26px;height:26px;border-radius:50%;background:var(--panel2);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--muted);flex:none;margin-top:1px}
+.cand .idn{flex:1;min-width:0}
+.cand .sym{font-family:var(--mono);font-weight:600;font-size:15.5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cand .name{font-size:12.5px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip{display:inline-flex;align-items:center;padding:1px 6px;border-radius:5px;background:var(--chip);color:var(--muted);font-size:10.5px;font-weight:700;letter-spacing:.03em;font-family:var(--sans)}
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:6px;font-size:10.5px;font-weight:800;letter-spacing:.05em;font-family:var(--sans)}
+.badge.setup{background:var(--okbg);color:var(--ok)}
+.badge.watch{background:var(--warnbg);color:var(--warn)}
+.badge.new{background:var(--bluebg);color:var(--blue)}
+.cand .px{text-align:right;flex:none}
+.cand .px .p{font-family:var(--mono);font-weight:600;font-size:15px}
+.cand .px .c{font-size:12px;font-weight:600}
+.up{color:var(--ok)} .dn{color:var(--fail)}
+.score{display:flex;align-items:center;gap:8px;padding:0 14px 6px;font-size:12px;color:var(--faint)}
+.score .bar{flex:1;height:5px;border-radius:3px;background:var(--panel2);overflow:hidden}
+.score .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brand-dark),var(--brand))}
+.score b{color:var(--ink);font-family:var(--mono);font-weight:600}
+.spark{padding:2px 14px 4px}
+.spark svg{width:100%;height:92px}
+.legend{display:flex;gap:10px;flex-wrap:wrap;padding:0 14px 6px;font-size:10.5px;color:var(--faint)}
+.legend i{display:inline-block;width:14px;height:0;border-top:2px solid;vertical-align:middle;margin-right:4px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 8px;padding:4px 14px 10px}
+.kpi{background:var(--panel2);border-radius:var(--r-sm);padding:6px 8px;min-width:0}
+.kpi .l{font-size:10.5px;color:var(--faint);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .v{font-family:var(--mono);font-size:13px;font-weight:600;margin-top:2px}
+.kpi .v small{font-family:var(--sans);font-size:10.5px;color:var(--faint);font-weight:500;margin-left:3px}
+.why{padding:0 14px 10px;display:grid;gap:4px}
+.why div{display:flex;gap:7px;font-size:13px;color:var(--ink2);line-height:1.4}
+.why .k{flex:none;width:16px;height:16px;border-radius:4px;display:grid;place-items:center;font-size:9.5px;font-weight:800;margin-top:2px}
+.k.pass{background:var(--okbg);color:var(--ok)} .k.warn{background:var(--warnbg);color:var(--warn)} .k.info{background:var(--bluebg);color:var(--blue)}
+.flags{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 10px}
+.flag{font-size:11.5px;font-weight:600;padding:3px 8px;border-radius:6px;background:var(--panel2);color:var(--muted)}
+.flag.warn{background:var(--warnbg);color:var(--warn)} .flag.fail{background:var(--failbg);color:var(--fail)} .flag.ok{background:var(--okbg);color:var(--ok)}
+.more{display:none;border-top:1px solid var(--line)}
+.cand.open .more{display:block}
+.sec{padding:10px 14px}
+.sec h3{margin:0 0 6px;font-size:11.5px;font-weight:700;color:var(--brand-deep);text-transform:uppercase;letter-spacing:.04em}
+.plan{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:13px}
+.plan div{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px dashed var(--line)}
+.plan .v{font-family:var(--mono);font-weight:600}
+.plan .v.big{color:var(--ok)}
+.lv{display:grid;gap:3px;font-size:12.5px}
+.lv div{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:3px 0}
+.lv .s{color:var(--muted)} .lv .n{font-family:var(--mono);font-weight:600} .lv .d{font-family:var(--mono);color:var(--faint);min-width:52px;text-align:right}
+.lv div.play .s{color:var(--ok);font-weight:700}
+.lv div.play .s::before{content:"● ";color:var(--brand)}
+.putline{font-size:12.5px;color:var(--ink2);background:var(--bluebg);border-radius:var(--r-sm);padding:7px 9px}
+.acts{display:flex;gap:8px;padding:8px 14px 12px;flex-wrap:wrap}
+.btn{min-height:44px;padding:0 14px;border-radius:10px;font-size:13.5px;font-weight:600;display:inline-flex;align-items:center;gap:6px;background:var(--panel2);color:var(--ink)}
+.btn.pri{background:var(--brand-dark);color:#fff}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.danger{color:var(--fail)}
+.btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.foot{display:flex;align-items:center;justify-content:space-between;padding:6px 14px 10px;border-top:1px solid var(--line)}
+.foot .ex{min-height:40px;display:inline-flex;align-items:center;gap:6px;color:var(--accent);font-weight:600;font-size:13px}
+.foot .ex svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
+.cand.open .foot .ex svg{transform:rotate(180deg)}
+
+/* quiet rows, record */
+.quiet{display:grid;gap:6px}
+.quiet div{display:flex;gap:8px;align-items:baseline;font-size:13px}
+.quiet .sym{font-family:var(--mono);font-weight:600;min-width:72px}
+.quiet .r{color:var(--muted)}
+.rec{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.rec .t{background:var(--panel2);border-radius:var(--r-sm);padding:7px 8px}
+.rec .t .l{font-size:10.5px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec .t .v{font-family:var(--mono);font-weight:600;font-size:15px;margin-top:2px}
+.rec .t .v small{font-family:var(--sans);font-size:10.5px;color:var(--faint);font-weight:500}
+.rwin{display:flex;gap:6px;margin:0 0 8px}
+.rwin button{min-height:34px;padding:0 12px;border-radius:8px;background:var(--panel2);font-size:12.5px;font-weight:600;color:var(--muted)}
+.rwin button.on{background:var(--accentbg);color:var(--accent)}
+.note{font-size:12.5px;color:var(--faint);margin-top:8px;line-height:1.45}
+.empty{padding:24px;text-align:center;color:var(--faint);font-size:14px}
+
+/* sheet + toast */
+.scrim{position:fixed;inset:0;background:rgba(11,20,26,.45);z-index:20;display:none}
+.scrim.on{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--panel);border-radius:16px 16px 0 0;padding:10px 16px calc(16px + env(safe-area-inset-bottom,0px));transform:translateY(105%);transition:transform .2s ease;max-height:88dvh;overflow:auto;overscroll-behavior:contain}
+.sheet.on{transform:none}
+@media (min-width: 900px){ .sheet{left:50%;right:auto;width:480px;transform:translate(-50%,105%)} .sheet.on{transform:translate(-50%,0)} }
+.grab{width:36px;height:4px;border-radius:2px;background:var(--line2);margin:0 auto 10px}
+.sheet h2{margin:0;font-size:17px;font-weight:700}
+.sheet .sub{font-size:12.5px;color:var(--faint);margin:2px 0 10px}
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.presets button{min-height:40px;padding:0 12px;border-radius:20px;background:var(--panel2);font-size:12.5px;font-weight:600;color:var(--muted)}
+.presets button.on{background:var(--accentbg);color:var(--accent)}
+.skill{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;min-height:52px;padding:6px 0;border-bottom:1px solid var(--line)}
+.skill input{width:20px;height:20px;accent-color:var(--brand-dark)}
+.skill .t{font-weight:600;font-size:14px}
+.skill .t span{font-weight:500;color:var(--faint);font-size:12.5px;margin-left:6px}
+.skill .d{font-size:12px;color:var(--faint);line-height:1.35}
+.skill .e{font-size:11.5px;color:var(--muted);text-align:right;white-space:nowrap}
+.sheet .acts{padding:12px 0 0}
+.fetchnote{font-size:12.5px;color:var(--warn);background:var(--warnbg);border-radius:var(--r-sm);padding:7px 9px;margin-top:8px}
+.toast{position:fixed;left:50%;bottom:calc(var(--tabbar) + 16px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:10px;font-size:13.5px;z-index:30;opacity:0;transition:all .2s;display:flex;gap:12px;align-items:center;max-width:calc(100% - 32px)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast button{color:var(--brand);font-weight:700;min-height:32px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="row"><h1>Leaders</h1><span class="asof" id="asof">Tue 13 Oct · after US close · 06:52 HKT</span></div>
+    <div class="sub">
+      <span class="regime" id="regime"><span class="dot"></span>Bull · calm · VIX 17.2 · SPY and HSI above 200d</span>
+      <span class="faint">· entries allowed</span>
+      <button class="tool" id="refresh"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg>Refresh</button>
+    </div>
+  </header>
+
+  <main class="body">
+    <section class="card span2">
+      <h2>Today's funnel</h2>
+      <div class="funnel" id="funnel"></div>
+      <div class="counts"><span><b>20</b> shortlisted</span><span><b>7</b> setup</span><span><b>13</b> watch</span><span><b>3</b> new today</span><span><b>3</b> dropped</span><span><b>US 10</b> · <b>HK 10</b></span></div>
+    </section>
+
+    <div class="span2">
+      <div class="daynav">
+        <button class="arrow" id="prev" aria-label="Previous day"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <div class="lbl" id="daylbl">Today<span>Tue 13 Oct 2026 · HK run 18:45 · US run 06:45 HKT</span></div>
+        <button class="arrow" id="next" aria-label="Next day" disabled style="opacity:.3"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+      </div>
+      <div class="archive" id="archive">Archived run for <b id="archday">Mon 12 Oct</b>: the list as it was computed that evening, with each name's later outcome stamped on it. <button class="pill" id="backtoday">Back to today</button></div>
+    </div>
+
+    <div class="filters span2">
+      <div class="seg" id="mkt"><button class="on" data-v="all">All</button><button data-v="US">US</button><button data-v="HK">HK</button></div>
+      <div class="seg" id="state"><button data-v="setup">Setup</button><button data-v="watch">Watch</button><button class="on" data-v="all">All</button></div>
+      <select id="sort" aria-label="Sort"><option value="score">Sort: Score</option><option value="tight">Sort: Tightness</option><option value="stop">Sort: Stop %</option><option value="r3">Sort: 3m gain</option></select>
+    </div>
+
+    <div id="list" class="span2" style="display:grid;gap:14px"></div>
+
+    <section class="card">
+      <h2>Dropped since yesterday</h2>
+      <div class="quiet" id="dropped"></div>
+    </section>
+
+    <section class="card">
+      <h2>How past signals did</h2>
+      <div class="rwin"><button class="on" data-w="60">Last 60 days</button><button data-w="all">All time</button></div>
+      <div class="rec" id="rec"></div>
+      <div class="note" id="recnote"></div>
+    </section>
+
+    <p class="note span2" style="margin:0 2px">Method: Martin Luk's pullback buy (screen for leaders, map support, stop and size first, 3R / 5R partials). Universe: S&amp;P 500, Nasdaq-100, S&amp;P 400, Hang Seng, H-share, TECH and Composite constituents; bars from Yahoo after each close. The twenty are computed by a versioned skill from stored bars; the one-line texts are written by a model from the skill's numbers and dropped if they add any number of their own. The app never places orders. Sample data, illustrative numbers.</p>
+  </main>
+
+  <nav class="tabbar" aria-label="Main">
+    <a href="#today"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Today</span><span class="badge">4</span></a>
+    <a class="active" href="#leaders"><svg viewBox="0 0 24 24"><path d="M4 18l5-6 4 3 7-9"/><path d="M15 6h5v5"/></svg><span>Leaders</span><span class="badge">7</span></a>
+    <a href="#research"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Research</span></a>
+    <a href="#news"><svg viewBox="0 0 24 24"><path d="M4 4h13a3 3 0 0 1 3 3v12a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2zM8 8h5M8 12h8M8 16h8"/></svg><span>News</span><span class="badge">2</span></a>
+    <a href="#watchlist"><svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg><span>Watch</span></a>
+    <a href="#more"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg><span>More</span></a>
+  </nav>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-title">
+  <div class="grab"></div>
+  <h2 id="sh-title">Investigate VRT</h2>
+  <div class="sub" id="sh-sub">Runs the research skills on this name and files the reports under Research.</div>
+  <div class="presets" id="presets"><button class="on" data-p="leader">Leader check · ~2 min</button><button data-p="numbers">Just the numbers</button><button data-p="full">Full deep dive · ~25 min</button></div>
+  <div id="skills"></div>
+  <div class="fetchnote" id="fetchnote">Not on the watchlist: statements will be fetched first (about 30 s) so the quality screen can run.</div>
+  <div class="acts"><button class="btn pri" id="runskills">Run 3 skills</button><button class="btn ghost" id="closesheet">Cancel</button></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ---------- sample data (illustrative; shapes are what GET /api/leaders would return) ----------
+const EQUITY_HKD = 2000000, USDHKD = 7.80, RISK_PCT = 0.005;
+const RISK_HKD = EQUITY_HKD * RISK_PCT, RISK_USD = RISK_HKD / USDHKD;
+
+const SKILLS = [
+  { id:'quality-screen', zh:'去劣筛选', en:'Quality screen', effort:'local · instant', local:true, does:'Seven hard filters on stored statements. No AI.' },
+  { id:'news-pulse', zh:'新闻脉搏', en:'News pulse', effort:'light · ~1 min · $0.3', does:'Four scouts: events, regulation, peers, sentiment. Why did it move?' },
+  { id:'thesis-tracker', zh:'论文追踪', en:'Thesis tracker', effort:'light · ~1 min · $0.3', does:'200-word thesis, assumptions, red lines. The reason to hold it if the entry fails.' },
+  { id:'investment-checklist', zh:'巴菲特Checklist', en:'Buffett checklist', effort:'medium · ~5 min · $1', does:'Six gates, mirror test, eight vetoes.' },
+  { id:'investment-research', zh:'四大师综合研究', en:'Four-masters research', effort:'heavy · ~12 min · $3', does:'Business, moat, inversion, management, trend, valuation, memo.' },
+  { id:'earnings-review', zh:'财报精读', en:'Earnings deep-read', effort:'medium · ~6 min · $1.5', does:'Primary filings only, figures cross-checked.' },
+  { id:'management-deep-dive', zh:'管理层纵深', en:'Management deep dive', effort:'medium · ~6 min · $1.5', does:'CEO, integrity, capital allocation, governance.' },
+];
+const PRESETS = { leader:['quality-screen','news-pulse','thesis-tracker'], numbers:['quality-screen'], full:['quality-screen','investment-research','earnings-review','management-deep-dive','thesis-tracker'] };
+
+// state: setup | watch. pct = rank percentile within market. dv = 20-day median dollar volume (millions, local ccy).
+// depth/len = base depth and length; contr = 10-bar/20-bar range; dry = vol10/vol50; atrR = ATR now / ATR at the high.
+// stop = stop distance % (setups, or a watch whose turn-up bar had a too-wide stop); earn = days to earnings (null = unknown).
+const CANDS = [
+  { mkt:'US', sym:'VRT', name:'Vertiv Holdings', px:168.40, chg:2.3, r1:9, r3:71, r6:112, pct:[88,94,96], dv:1420, depth:.14, len:19, contr:.62, dry:.78, atrR:.86, state:'setup', score:91, stop:2.4, earn:16, isNew:true, watched:true, seed:7,
+    why:[['pass','Top 6% on 3m (+71%) and top 4% on 6m; RS vs SPY +58 pts'],['pass','Base 14% deep over 19 days, 10-day range 62% of the 20-day, volume 78% of its 50-day'],['pass','Closed in the top third of its range off AVWAP from the base low; AVWAP from the range high is the next hurdle']],
+    put:'Put angle: 21 Nov 160P · delta .21 · 1.6% ROC · strike 1.1% under the stop' },
+  { mkt:'US', sym:'APP', name:'AppLovin', px:612.30, chg:3.1, r1:12, r3:48, r6:95, pct:[90,87,95], dv:2100, depth:.11, len:12, contr:.58, dry:.71, atrR:.80, state:'setup', score:88, stop:2.1, earn:22, seed:3,
+    why:[['pass','Top 10% on all three windows (+48% 3m, +95% 6m)'],['pass','Shallow 11% base in 12 days with the tightest range on the list (58%)'],['pass','Turn-up bar on 1.4x volume, 21-EMA and prior swing high within 0.8% (confluence 3)']] },
+  { mkt:'HK', sym:'0981', name:'SMIC', px:68.50, chg:2.9, r1:7, r3:54, r6:83, pct:[85,92,93], dv:1900, depth:.17, len:23, contr:.66, dry:.80, atrR:.92, state:'setup', score:86, stop:2.8, earn:29, lot:50, isNew:true, seed:11,
+    why:[['pass','Top 8% on 3m (+54%); the strongest HK semi name on 6m (+83%)'],['pass','17% base over 23 days, volume dried to 80% of its 50-day'],['warn','Bounce from AVWAP of the base low; stop 2.8% is inside the 3% cap but wide']] },
+  { mkt:'US', sym:'ANET', name:'Arista Networks', px:148.20, chg:1.8, r1:5, r3:36, r6:58, pct:[72,80,84], dv:1150, depth:.09, len:15, contr:.54, dry:.66, atrR:.78, state:'setup', score:84, stop:1.9, earn:25, watched:true, seed:5,
+    why:[['pass','Top 20% on 3m and 6m (+36%, +58%); leader rule met on two windows'],['pass','9% base, the driest volume on the list (66% of 50-day)'],['pass','Tightest stop of the day (1.9%) under yesterday’s low at the 21-EMA']],
+    put:'Put angle: 21 Nov 140P · delta .19 · 1.2% ROC · strike 3.6% under the stop' },
+  { mkt:'HK', sym:'1810', name:'Xiaomi', px:58.90, chg:2.4, r1:8, r3:42, r6:61, pct:[86,88,85], dv:2400, depth:.13, len:17, contr:.70, dry:.84, atrR:.88, state:'setup', score:82, stop:2.6, earn:38, lot:200, watched:true, seed:13,
+    why:[['pass','Top 14% on every window (+42% 3m)'],['pass','13% base over 17 days; unfilled gap from 22 Sep still holds 2.1% below'],['pass','Reclaimed the 21-EMA today after three closes under it']],
+    put:'Put angle: 28 Oct 56P · delta .23 · 1.9% ROC · strike 2.5% under the stop' },
+  { mkt:'US', sym:'HOOD', name:'Robinhood Markets', px:142.70, chg:2.7, r1:11, r3:44, r6:97, pct:[89,84,95], dv:1850, depth:.19, len:27, contr:.72, dry:.88, atrR:.95, state:'setup', score:79, stop:2.9, earn:12, seed:17,
+    why:[['pass','Top 16% on 3m, top 5% on 6m (+97%)'],['warn','Deeper, longer base (19% over 27 days); volume only just drying (88%)'],['warn','Stop 2.9% sits at the cap; earnings in 12 days, outside the 7-day blackout']] },
+  { mkt:'HK', sym:'3750', name:'CATL', px:412.00, chg:1.6, r1:6, r3:38, r6:55, pct:[82,85,81], dv:980, depth:.10, len:11, contr:.61, dry:.76, atrR:.84, state:'setup', score:78, stop:2.2, earn:9, lot:100, isNew:true, seed:19,
+    why:[['pass','Top 18% on 3m (+38%), RS vs HSI +24 pts'],['pass','10% base in 11 days with a 61% range contraction'],['info','Earnings in 9 days: the plan is valid, but the 3R leg may not arrive before them']] },
+  { mkt:'US', sym:'PLTR', name:'Palantir', px:176.40, chg:-0.8, r1:3, r3:33, r6:66, pct:[76,78,88], dv:3900, depth:.12, len:14, contr:.77, dry:.91, atrR:1.02, state:'watch', score:74, stop:null, earn:20, seed:23,
+    why:[['pass','Top 22% on 3m and top 12% on 6m (+66%)'],['info','12% base over 14 days, sitting on the 21-EMA'],['warn','No turn-up bar yet: closed in the lower half of its range']] },
+  { mkt:'HK', sym:'0700', name:'Tencent', px:612.00, chg:-0.5, r1:4, r3:31, r6:44, pct:[70,76,74], dv:5100, depth:.08, len:9, contr:.80, dry:.93, atrR:.97, state:'watch', score:72, stop:null, earn:32, lot:100, watched:true, seed:29,
+    why:[['pass','+31% on 3m clears the 30% rule; rank 76th'],['info','Shallow 8% base, only 9 days old; range not yet contracted (80%)'],['warn','Waiting for a bounce off the 21-EMA or AVWAP (0.9% below)']],
+    put:'Put angle: 28 Oct 590P · delta .20 · 1.3% ROC' },
+  { mkt:'US', sym:'CLS', name:'Celestica', px:221.50, chg:0.4, r1:10, r3:62, r6:118, pct:[91,93,97], dv:640, depth:.16, len:8, contr:.84, dry:.95, atrR:1.05, state:'watch', score:71, stop:null, earn:14, seed:31,
+    why:[['pass','Top 7% on 3m (+62%), top 3% on 6m (+118%)'],['warn','Base is only 8 days old and volume has not dried (95%)'],['info','First support test at the 21-EMA likely this week']] },
+  { mkt:'HK', sym:'1211', name:'BYD', px:118.30, chg:-1.2, r1:-2, r3:34, r6:41, pct:[58,79,72], dv:2200, depth:.15, len:31, contr:.69, dry:.82, atrR:.90, state:'watch', score:69, stop:3.6, earn:15, lot:500, seed:37,
+    why:[['pass','+34% on 3m, rank 79th; leader rule met on 3m and 6m'],['warn','Turn-up bar two days ago but its stop was 3.6% (cap 3%); waiting for a tighter bar'],['info','15% base over 31 days, AVWAP from the range high 1.4% above']] },
+  { mkt:'US', sym:'AVGO', name:'Broadcom', px:342.10, chg:0.9, r1:6, r3:35, r6:49, pct:[80,81,78], dv:4800, depth:.07, len:13, contr:.74, dry:.86, atrR:.89, state:'watch', score:68, stop:2.3, earn:5, watched:true, seed:41,
+    why:[['pass','Top 20% on every window (+35% 3m)'],['pass','Turn-up bar today off the 21-EMA with a 2.3% stop'],['warn','Earnings in 5 days: inside the 7-day blackout, shown as Watch']] },
+  { mkt:'HK', sym:'3690', name:'Meituan', px:148.60, chg:0.3, r1:5, r3:37, r6:29, pct:[78,83,60], dv:2700, depth:.21, len:36, contr:.73, dry:.79, atrR:.93, state:'watch', score:66, stop:null, earn:27, lot:100, seed:43,
+    why:[['pass','+37% on 3m (rank 83rd); 6m below the leader line'],['warn','Deep 21% base over 36 days, near the 25% limit'],['info','Volume dried to 79%; needs a close back above the 21-EMA']] },
+  { mkt:'US', sym:'TSM', name:'Taiwan Semiconductor', px:268.90, chg:0.6, r1:4, r3:32, r6:47, pct:[74,77,77], dv:2900, depth:.06, len:12, contr:.81, dry:.90, atrR:.98, state:'watch', score:65, stop:null, earn:null, seed:47,
+    why:[['pass','+32% on 3m, rank 77th on both longer windows'],['info','Very shallow 6% base: support is the 21-EMA and the 29 Sep gap'],['warn','Earnings date unknown in our data']] },
+  { mkt:'HK', sym:'2382', name:'Sunny Optical', px:94.20, chg:-0.9, r1:9, r3:57, r6:72, pct:[88,92,89], dv:410, depth:.18, len:21, contr:.71, dry:.77, atrR:.87, state:'watch', score:64, stop:null, earn:44, lot:100, seed:53,
+    why:[['pass','Top 8% on 3m (+57%)'],['info','18% base over 21 days; volume dried to 77%'],['warn','Thin for its size: HK$410m a day, just above the HK$30m floor x14, position would be 2% of volume']] },
+  { mkt:'US', sym:'RKLB', name:'Rocket Lab', px:58.40, chg:1.4, r1:14, r3:69, r6:131, pct:[93,95,98], dv:720, depth:.23, len:29, contr:.78, dry:.85, atrR:1.08, state:'watch', score:62, stop:null, earn:19, seed:59,
+    why:[['pass','Strongest momentum on the list (+69% 3m, +131% 6m)'],['warn','23% base is close to the 25% limit; ATR still above its level at the high'],['info','Support in play is the base low, not a moving average']] },
+  { mkt:'HK', sym:'0020', name:'SenseTime', px:2.64, chg:0.8, r1:12, r3:45, r6:78, pct:[90,89,91], dv:520, depth:.20, len:24, contr:.83, dry:.97, atrR:1.01, state:'watch', score:60, stop:null, earn:37, lot:1000, seed:61,
+    why:[['pass','Top 10% on every window'],['warn','Volume has not dried (97%) and the range is still wide (83%)'],['info','Board lot 1,000 at HK$2.64: sizing is easy here']] },
+  { mkt:'US', sym:'NFLX', name:'Netflix', px:1284.00, chg:-0.3, r1:2, r3:30, r6:38, pct:[66,75,70], dv:2300, depth:.09, len:16, contr:.79, dry:.89, atrR:.94, state:'watch', score:58, stop:null, earn:3, watched:true, seed:67,
+    why:[['pass','+30% on 3m, exactly at the leader line; rank 75th'],['warn','Earnings in 3 days: blackout'],['info','9% base; the 50-EMA is the level in play']] },
+  { mkt:'HK', sym:'9988', name:'Alibaba', px:168.70, chg:0.2, r1:3, r3:36, r6:52, pct:[72,82,80], dv:6800, depth:.12, len:18, contr:.76, dry:.88, atrR:.92, state:'watch', score:57, stop:null, earn:31, lot:100, watched:true, seed:71,
+    why:[['pass','+36% on 3m (rank 82nd), the most liquid HK name on the list'],['info','12% base over 18 days on the 21-EMA'],['warn','Inside bars for three days, no turn-up yet']],
+    put:'Put angle: 28 Oct 160P · delta .22 · 1.5% ROC' },
+  { mkt:'HK', sym:'2015', name:'Li Auto', px:112.40, chg:-1.5, r1:-4, r3:31, r6:40, pct:[52,75,71], dv:690, depth:.24, len:40, contr:.86, dry:.99, atrR:1.04, state:'watch', score:55, stop:null, earn:23, lot:100, seed:73,
+    why:[['pass','+31% on 3m clears the rule, rank 75th'],['warn','Base 24% deep and 40 days long: both one notch from the limit'],['warn','Volume not dried (99%); lowest score on the list']] },
+];
+
+const DROPPED = [
+  { sym:'COIN', mkt:'US', r:'Extended: 12% above the 21-EMA after yesterday’s gap; no support within 3 ATR' },
+  { sym:'9618', mkt:'HK', r:'Broke: closed below the 50-EMA and the base low' },
+  { sym:'1024', mkt:'HK', r:'Muted by you on 7 Oct, 6 trading days left' },
+];
+const RECORD = {
+  '60': { n:84, hit:38, stopped:39, open:7, avgR:0.62, med:9, best:'+7.4R · CLS · 2 Sep', worst:'−1.3R · gap through stop · 18 Sep', watchToSetup:'31 of 96' },
+  'all': { n:212, hit:93, stopped:104, open:15, avgR:0.55, med:10, best:'+9.1R · VRT · 14 May', worst:'−1.6R · gap through stop · 4 Apr', watchToSetup:'74 of 240' },
+};
+
+// ---------- synthetic bars so every chart is consistent with the method (run-up, base, turn-up) ----------
+function rng(seed){ let s = seed * 9301 + 49297; return () => { s = (s * 9301 + 49297) % 233280; return s / 233280; }; }
+function series(c){
+  const N = 160, len = c.len, anchor = N - 1 - len, rand = rng(c.seed);
+  const H = 100, L = H * (1 - c.depth), start = H / (1 + c.r6 / 100 + 0.08);
+  const close = [], high = [], low = [], vol = [];
+  for (let i = 0; i < N; i++){
+    let v;
+    if (i <= anchor){ const t = i / anchor; v = start * Math.pow(H / start, t) * (1 + 0.025 * Math.sin(t * 19) + (rand() - .5) * 0.03); if (i === anchor) v = H; }
+    else { const t = (i - anchor) / len; const trough = Math.min(1, t / 0.7); v = H - (H - L) * trough * (1 - 0.35 * Math.max(0, t - 0.7)) + (rand() - .5) * H * 0.012; }
+    close.push(v);
+  }
+  // last two bars: a setup turns up from the base low region; a watch drifts
+  if (c.state === 'setup'){ close[N-2] = L * 1.004; close[N-1] = L * 1.03; } else { close[N-2] = close[N-3] * (1 + (rand()-.5)*0.01); close[N-1] = close[N-2] * (1 + c.chg/100); }
+  const k = c.px / close[N-1];
+  for (let i = 0; i < N; i++){
+    close[i] *= k; const r = close[i] * (0.012 + rand() * 0.012);
+    high.push(close[i] + r * (0.4 + rand() * 0.6)); low.push(close[i] - r * (0.4 + rand() * 0.6));
+    const base = i <= anchor ? 1.0 : 1.0 - 0.45 * Math.min(1, (i - anchor) / len);
+    vol.push(base * (0.7 + rand() * 0.6));
+  }
+  if (c.state === 'setup'){ low[N-1] = Math.min(low[N-1], close[N-1] * (1 - c.stop/100) + close[N-1]*0.0025); high[N-1] = Math.max(high[N-1], close[N-1]*1.004); vol[N-1] *= 1.5; }
+  return { close, high, low, vol, anchor };
+}
+function ema(xs, p){ const out = []; let e = null; const k = 2/(p+1); let sum = 0; for (let i=0;i<xs.length;i++){ if (i < p-1){ sum += xs[i]; out.push(null); continue; } if (i === p-1){ sum += xs[i]; e = sum/p; } else e = xs[i]*k + e*(1-k); out.push(e); } return out; }
+function avwap(s, a){ const out = new Array(s.close.length).fill(null); let pv = 0, vv = 0; for (let i=a;i<s.close.length;i++){ const tp = (s.high[i]+s.low[i]+s.close[i])/3; pv += tp*s.vol[i]; vv += s.vol[i]; out[i] = pv/vv; } return out; }
+
+function sparkline(c, s, e21, e50, aw){
+  const W = 320, Hh = 92, pad = 4, n = 70, from = s.close.length - n;
+  const seriesList = [s.close, e21, e50, aw].map(a => a.slice(from));
+  let mn = Infinity, mx = -Infinity;
+  seriesList.forEach(a => a.forEach(v => { if (v != null){ mn = Math.min(mn, v); mx = Math.max(mx, v); } }));
+  const stop = c.state === 'setup' ? c.px * (1 - c.stop/100) : null; if (stop) mn = Math.min(mn, stop);
+  const x = i => pad + i * (W - 2*pad) / (n - 1), y = v => Hh - pad - (v - mn) * (Hh - 2*pad) / (mx - mn || 1);
+  const path = (a, dash, col, w) => { let d = ''; a.forEach((v,i) => { if (v == null) return; d += (d ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1); }); return `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" ${dash?`stroke-dasharray="${dash}"`:''} stroke-linejoin="round"/>`; };
+  const ai = s.anchor - from;
+  let g = `<svg viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="none" aria-label="70-day chart with EMA21, EMA50 and AVWAP">`;
+  g += path(seriesList[2], '3 3', 'var(--dim)', 1);
+  g += path(seriesList[3], '1 3', 'var(--blue)', 1.4);
+  g += path(seriesList[1], null, 'var(--warn)', 1.2);
+  g += path(seriesList[0], null, 'var(--ink)', 1.6);
+  if (ai >= 0) g += `<circle cx="${x(ai).toFixed(1)}" cy="${y(s.high[s.anchor]).toFixed(1)}" r="2.5" fill="var(--blue)"/>`;
+  if (stop) g += `<line x1="${x(n-9)}" x2="${W-pad}" y1="${y(stop).toFixed(1)}" y2="${y(stop).toFixed(1)}" stroke="var(--fail)" stroke-width="1.2" stroke-dasharray="2 2"/>`;
+  g += `<circle cx="${x(n-1).toFixed(1)}" cy="${y(s.close[s.close.length-1]).toFixed(1)}" r="2.8" fill="${c.state==='setup'?'var(--brand)':'var(--warn)'}"/>`;
+  return g + '</svg>';
+}
+
+// ---------- formatting ----------
+const ccy = c => c.mkt === 'HK' ? 'HK$' : 'US$';
+const money = (c, v, d) => ccy(c) + v.toLocaleString('en-US', { minimumFractionDigits: d ?? (v >= 100 ? 2 : 2), maximumFractionDigits: d ?? 2 });
+const pct = (v, s) => (s && v > 0 ? '+' : '') + v.toFixed(1) + '%';
+const big = v => v >= 1000 ? (v/1000).toFixed(1) + 'b' : v + 'm';
+
+function plan(c, s){
+  if (c.state !== 'setup') return null;
+  const entry = c.px, stop = +(entry * (1 - c.stop/100)).toFixed(2), R = entry - stop;
+  const risk = c.mkt === 'HK' ? RISK_HKD : RISK_USD;
+  let shares = Math.floor(risk / R), lotBig = false;
+  if (c.mkt === 'HK'){ const lot = c.lot || 100; shares = Math.floor(shares / lot) * lot; if (shares === 0){ shares = lot; lotBig = true; } }
+  const value = shares * entry, valueHKD = c.mkt === 'HK' ? value : value * USDHKD;
+  return { entry, alt: +(s.high[s.high.length-1] * 1.001).toFixed(2), stop, R, risk: shares * R, shares, value, pctEq: valueHKD / EQUITY_HKD * 100, r3: entry + 3*R, r5: entry + 5*R, lotBig, lot: c.lot };
+}
+
+function levels(c, s, e9, e21, e50, awH, awL){
+  const n = s.close.length - 1, L = Math.min(...s.low.slice(s.anchor, n - 1));
+  const list = [
+    { s:'EMA 9', v:e9[n] }, { s:'EMA 21', v:e21[n] }, { s:'EMA 50', v:e50[n] },
+    { s:'AVWAP from range high', v:awH[n] }, { s:'AVWAP from base low', v:awL[n] }, { s:'Base low', v:L },
+  ];
+  if (c.sym === '1810') list.push({ s:'Unfilled gap 22 Sep (top)', v: c.px * 0.979 });
+  if (c.sym === 'APP') list.push({ s:'Prior swing high 18 Aug', v: c.px * 0.992 });
+  if (c.sym === 'TSM') list.push({ s:'Unfilled gap 29 Sep (top)', v: c.px * 0.962 });
+  const low3 = Math.min(s.low[n], s.low[n-1], s.low[n-2]);
+  list.forEach(l => { l.d = (c.px / l.v - 1) * 100; l.gap = Math.abs(low3 / l.v - 1); l.play = false; });
+  list.sort((a,b) => a.d - b.d);
+  // support in play: the level closest to the lowest low of the last 3 bars, within 3%, and not above today's close
+  const near = list.filter(l => l.v <= c.px * 1.005 && l.gap < 0.03).sort((a,b) => a.gap - b.gap)[0];
+  if (near) near.play = true;
+  return list;
+}
+
+// ---------- render ----------
+const list = document.getElementById('list');
+const F = { mkt:'all', state:'all', sort:'score', stage:'shortlist', muted: new Set() };
+const CACHE = new Map();
+function compute(c){
+  if (CACHE.has(c.sym)) return CACHE.get(c.sym);
+  const s = series(c), e9 = ema(s.close, 9), e21 = ema(s.close, 21), e50 = ema(s.close, 50);
+  const awH = avwap(s, s.anchor), lowIdx = s.anchor + s.low.slice(s.anchor).indexOf(Math.min(...s.low.slice(s.anchor, s.close.length-1)));
+  const awL = avwap(s, lowIdx);
+  const o = { s, e9, e21, e50, awH, awL, plan: plan(c, s), lv: levels(c, s, e9, e21, e50, awH, awL), spark: sparkline(c, s, e21, e50, awH) };
+  CACHE.set(c.sym, o); return o;
+}
+
+function flagsOf(c, p){
+  const f = [];
+  if (c.earn != null && c.earn <= 7) f.push(['fail', `Earnings in ${c.earn} d · blackout`]);
+  else if (c.earn != null && c.earn <= 14) f.push(['warn', `Earnings in ${c.earn} d`]);
+  else if (c.earn == null) f.push(['warn', 'Earnings date unknown']);
+  if (c.stop != null && c.stop > 3) f.push(['fail', `Stop ${c.stop}% > 3% cap`]);
+  else if (c.stop != null && c.stop >= 2.5) f.push(['warn', `Stop ${c.stop}% wide`]);
+  if (p && p.lotBig) f.push(['warn', `1 lot risks ${(p.risk / (c.mkt==='HK'?EQUITY_HKD:EQUITY_HKD/USDHKD)*100).toFixed(2)}%`]);
+  if (c.depth >= .2) f.push(['warn', `Base ${Math.round(c.depth*100)}% deep`]);
+  if (c.watched) f.push(['ok', 'On watchlist']);
+  if (c.put) f.push(['ok', 'Chain stored']);
+  return f;
+}
+
+function card(c, i){
+  const o = compute(c), p = o.plan, n = o.s.close.length - 1;
+  const dE21 = (c.px / o.e21[n] - 1) * 100, dAW = (c.px / o.awH[n] - 1) * 100;
+  const atrPct = 1.9 + (c.seed % 7) * 0.25;
+  const el = document.createElement('article');
+  el.className = 'cand ' + c.state; el.dataset.sym = c.sym;
+  el.innerHTML = `
+    <button class="hd" aria-expanded="false">
+      <span class="rank num">${i+1}</span>
+      <span class="idn"><span class="sym">${c.sym}${c.mkt==='HK'?'<span class="chip">HK</span>':'<span class="chip">US</span>'}<span class="badge ${c.state}">${c.state.toUpperCase()}</span>${c.isNew?'<span class="badge new">NEW</span>':''}</span><span class="name">${c.name}</span></span>
+      <span class="px"><span class="p num">${money(c, c.px)}</span><br><span class="c num ${c.chg>=0?'up':'dn'}">${pct(c.chg, true)}</span></span>
+    </button>
+    <div class="score"><span>Score</span><span class="bar"><i style="width:${c.score}%"></i></span><b>${c.score}</b></div>
+    <div class="spark">${o.spark}</div>
+    <div class="legend"><span><i style="border-color:var(--ink)"></i>Close</span><span><i style="border-color:var(--warn)"></i>EMA 21</span><span><i style="border-color:var(--dim);border-top-style:dashed"></i>EMA 50</span><span><i style="border-color:var(--blue);border-top-style:dotted"></i>AVWAP (range high ●)</span>${p?'<span><i style="border-color:var(--fail);border-top-style:dashed"></i>Stop</span>':''}</div>
+    <div class="kpis">
+      <div class="kpi"><div class="l">1m</div><div class="v num ${c.r1>=0?'up':'dn'}">${pct(c.r1,true)}<small>p${c.pct[0]}</small></div></div>
+      <div class="kpi"><div class="l">3m</div><div class="v num up">${pct(c.r3,true)}<small>p${c.pct[1]}</small></div></div>
+      <div class="kpi"><div class="l">6m</div><div class="v num up">${pct(c.r6,true)}<small>p${c.pct[2]}</small></div></div>
+      <div class="kpi"><div class="l">vs EMA 21</div><div class="v num">${pct(dE21,true)}</div></div>
+      <div class="kpi"><div class="l">vs AVWAP</div><div class="v num">${pct(dAW,true)}</div></div>
+      <div class="kpi"><div class="l">Base depth · days</div><div class="v num">${Math.round(c.depth*100)}%<small>${c.len} d</small></div></div>
+      <div class="kpi"><div class="l">Range 10/20</div><div class="v num">${Math.round(c.contr*100)}%</div></div>
+      <div class="kpi"><div class="l">Vol 10/50</div><div class="v num">${Math.round(c.dry*100)}%</div></div>
+      <div class="kpi"><div class="l">$ vol 20d · ATR</div><div class="v num">${ccy(c)}${big(c.dv)}<small>${atrPct.toFixed(1)}%</small></div></div>
+    </div>
+    <div class="why">${c.why.map(([k,t]) => `<div><span class="k ${k}">${k==='pass'?'✓':k==='warn'?'!':'i'}</span><span>${t}</span></div>`).join('')}</div>
+    <div class="flags">${flagsOf(c, p).map(([k,t]) => `<span class="flag ${k}">${t}</span>`).join('')}</div>
+    <div class="more">
+      <div class="sec"><h3>Trade plan · risk 0.5% of equity${p?'':' · needs a turn-up bar'}</h3>
+        ${p ? `<div class="plan">
+          <div><span>Entry (close)</span><span class="v num">${money(c,p.entry)}</span></div>
+          <div><span>Stop-buy alt.</span><span class="v num">${money(c,p.alt)}</span></div>
+          <div><span>Stop</span><span class="v num dn">${money(c,p.stop)}</span></div>
+          <div><span>Stop distance</span><span class="v num">${c.stop.toFixed(1)}%</span></div>
+          <div><span>1R</span><span class="v num">${money(c,p.R)}</span></div>
+          <div><span>Risk budget</span><span class="v num">${money(c, c.mkt==='HK'?RISK_HKD:RISK_USD, 0)}</span></div>
+          <div><span>Shares${p.lot?' (lot '+p.lot+')':''}</span><span class="v num">${p.shares.toLocaleString()}</span></div>
+          <div><span>Risk at stop</span><span class="v num">${money(c,p.risk,0)}</span></div>
+          <div><span>Position</span><span class="v num">${money(c,p.value,0)}</span></div>
+          <div><span>% of equity</span><span class="v num">${p.pctEq.toFixed(1)}%</span></div>
+          <div><span>3R · sell part</span><span class="v num big">${money(c,p.r3)}</span></div>
+          <div><span>5R · sell part</span><span class="v num big">${money(c,p.r5)}</span></div>
+        </div><div class="note">Trail the rest. Levels are before costs; the stop is the lower of today’s and yesterday’s low less 0.2%.</div>`
+        : `<div class="note">Watch names have no plan: the stop is set from the turn-up bar on the day it prints. ${c.stop!=null?`The last turn-up bar needed a ${c.stop}% stop, above the 3% cap.`:''}${c.earn!=null&&c.earn<=7?' Earnings inside the 7-day blackout.':''}</div>`}
+      </div>
+      <div class="sec"><h3>Support map</h3><div class="lv">${o.lv.map(l => `<div class="${l.play?'play':''}"><span class="s">${l.s}${l.play?' · in play':''}</span><span class="n">${money(c,l.v)}</span><span class="d">${pct(l.d,true)}</span></div>`).join('')}</div></div>
+      ${c.put ? `<div class="sec"><div class="putline">${c.put}</div></div>` : ''}
+      <div class="acts">
+        <button class="btn pri" data-act="inv"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Investigate</button>
+        ${c.watched ? '' : '<button class="btn" data-act="watch">Add to watchlist</button>'}
+        <a class="btn ghost" target="_blank" rel="noopener" href="https://www.tradingview.com/chart/?symbol=${c.mkt==='HK'?'HKEX:'+String(+c.sym):c.sym}">Chart ↗</a>
+        <button class="btn ghost danger" data-act="mute">Dismiss</button>
+      </div>
+    </div>
+    <div class="foot"><button class="btn pri" data-act="inv" style="min-height:40px;padding:0 12px;font-size:13px">Investigate</button><button class="ex" data-act="ex">Plan &amp; levels<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></div>`;
+  el.querySelector('.hd').addEventListener('click', () => toggle(el));
+  el.querySelector('[data-act="ex"]').addEventListener('click', () => toggle(el));
+  el.querySelectorAll('[data-act="inv"]').forEach(b => b.addEventListener('click', () => openSheet(c)));
+  const w = el.querySelector('[data-act="watch"]'); if (w) w.addEventListener('click', () => { c.watched = true; toast(`${c.sym} added to the watchlist · fetched tonight`); render(); });
+  el.querySelector('[data-act="mute"]').addEventListener('click', () => { F.muted.add(c.sym); render(); toast(`${c.sym} muted for 10 trading days`, 'Undo', () => { F.muted.delete(c.sym); render(); }); });
+  return el;
+}
+function toggle(el){ el.classList.toggle('open'); el.querySelector('.hd').setAttribute('aria-expanded', el.classList.contains('open')); }
+
+function render(){
+  let rows = CANDS.filter(c => !F.muted.has(c.sym));
+  if (F.mkt !== 'all') rows = rows.filter(c => c.mkt === F.mkt);
+  if (F.state !== 'all') rows = rows.filter(c => c.state === F.state);
+  const key = { score: c => -c.score, tight: c => c.contr + c.dry, stop: c => c.stop == null ? 99 : c.stop, r3: c => -c.r3 }[F.sort];
+  rows.sort((a,b) => key(a) - key(b) || (a.state === 'setup' ? -1 : 1));
+  list.innerHTML = '';
+  if (F.stage !== 'shortlist'){ list.innerHTML = `<div class="card empty">Funnel stage "${F.stage}" lists the names that stopped there and the rule they failed (e.g. "AMD: base 31% deep > 25%"). Sample data has the shortlist only. <br><br><button class="pill" id="backsl">Back to the shortlist</button></div>`; document.getElementById('backsl').addEventListener('click', () => { F.stage='shortlist'; renderFunnel(); render(); }); return; }
+  if (!rows.length){ list.innerHTML = '<div class="card empty">Nothing matches these filters.</div>'; return; }
+  rows.forEach((c, i) => list.appendChild(card(c, i)));
+}
+
+function renderFunnel(){
+  const stages = [['screened',1312,'screened · US 842 / HK 470'],['leaders',61,'leaders · up >30%, top quarter'],['consolidating',29,'in a valid base'],['shortlist',20,'shortlist · top 20']];
+  document.getElementById('funnel').innerHTML = stages.map(([k,n,l],i) => `<button class="stage ${F.stage===k?'sel':''} ${i===3?'last':''}" data-k="${k}"><div class="n num">${n.toLocaleString()}</div><div class="l">${l}</div></button>`).join('');
+  document.querySelectorAll('.stage').forEach(b => b.addEventListener('click', () => { F.stage = b.dataset.k; renderFunnel(); render(); }));
+}
+
+document.getElementById('dropped').innerHTML = DROPPED.map(d => `<div><span class="sym">${d.sym}<span class="chip" style="margin-left:5px">${d.mkt}</span></span><span class="r">${d.r}</span></div>`).join('');
+
+function renderRecord(w){
+  const r = RECORD[w];
+  document.getElementById('rec').innerHTML = `
+    <div class="t"><div class="l">Setups shown</div><div class="v num">${r.n}</div></div>
+    <div class="t"><div class="l">Reached 3R first</div><div class="v num">${Math.round(r.hit/r.n*100)}%<small> ${r.hit}</small></div></div>
+    <div class="t"><div class="l">Stopped first</div><div class="v num">${Math.round(r.stopped/r.n*100)}%<small> ${r.stopped}</small></div></div>
+    <div class="t"><div class="l">Still open</div><div class="v num">${r.open}</div></div>
+    <div class="t"><div class="l">Avg R (20 d)</div><div class="v num up">+${r.avgR.toFixed(2)}</div></div>
+    <div class="t"><div class="l">Median days to 3R</div><div class="v num">${r.med}</div></div>
+    <div class="t" style="grid-column:span 2"><div class="l">Best · worst</div><div class="v num" style="font-size:12px">${r.best}<br>${r.worst}</div></div>`;
+  document.getElementById('recnote').textContent = `Counted from the close of the day a Setup was shown, entry at that close, exit at 3R or the stop, else marked at 20 days. Watch names that later printed a Setup: ${r.watchToSetup}. This is the app’s own forward record, not a backtest; the edge, if any, is in the stop, not the entry.`;
+}
+document.querySelectorAll('.rwin button').forEach(b => b.addEventListener('click', () => { document.querySelectorAll('.rwin button').forEach(x => x.classList.toggle('on', x===b)); renderRecord(b.dataset.w); }));
+
+// filters
+['mkt','state'].forEach(id => document.getElementById(id).querySelectorAll('button').forEach(b => b.addEventListener('click', () => { document.getElementById(id).querySelectorAll('button').forEach(x => x.classList.toggle('on', x===b)); F[id] = b.dataset.v; render(); })));
+document.getElementById('sort').addEventListener('change', e => { F.sort = e.target.value; render(); });
+
+// day navigator (archive mode)
+let dayOff = 0;
+const DAYS = ['Tue 13 Oct', 'Mon 12 Oct', 'Fri 9 Oct', 'Thu 8 Oct'];
+function setDay(){
+  const a = document.getElementById('archive'), lbl = document.getElementById('daylbl');
+  document.getElementById('next').disabled = dayOff === 0; document.getElementById('next').style.opacity = dayOff === 0 ? .3 : 1;
+  if (dayOff === 0){ a.classList.remove('on'); lbl.innerHTML = 'Today<span>Tue 13 Oct 2026 · HK run 18:45 · US run 06:45 HKT</span>'; document.getElementById('asof').textContent = 'Tue 13 Oct · after US close · 06:52 HKT'; }
+  else { a.classList.add('on'); document.getElementById('archday').textContent = DAYS[dayOff]; lbl.innerHTML = `${DAYS[dayOff]}<span>${dayOff} trading day${dayOff>1?'s':''} ago · outcomes stamped</span>`; document.getElementById('asof').textContent = 'Archive'; }
+}
+document.getElementById('prev').addEventListener('click', () => { if (dayOff < DAYS.length-1){ dayOff++; setDay(); } });
+document.getElementById('next').addEventListener('click', () => { if (dayOff > 0){ dayOff--; setDay(); } });
+document.getElementById('backtoday').addEventListener('click', () => { dayOff = 0; setDay(); });
+document.getElementById('refresh').addEventListener('click', () => toast('Scan queued for both markets · about 1 min warm'));
+
+// investigate sheet
+let cur = null, preset = 'leader';
+function openSheet(c){
+  cur = c; preset = 'leader';
+  document.getElementById('sh-title').textContent = `Investigate ${c.sym} · ${c.name}`;
+  document.getElementById('fetchnote').style.display = c.watched ? 'none' : 'block';
+  renderSkills();
+  document.getElementById('scrim').classList.add('on'); document.getElementById('sheet').classList.add('on');
+}
+function closeSheet(){ document.getElementById('scrim').classList.remove('on'); document.getElementById('sheet').classList.remove('on'); }
+function renderSkills(){
+  const on = new Set(PRESETS[preset]);
+  document.querySelectorAll('#presets button').forEach(b => b.classList.toggle('on', b.dataset.p === preset));
+  document.getElementById('skills').innerHTML = SKILLS.map(s => `<label class="skill"><input type="checkbox" data-id="${s.id}" ${on.has(s.id)?'checked':''}><span><div class="t">${s.en}<span>${s.zh}</span></div><div class="d">${s.does}</div></span><span class="e">${s.effort}</span></label>`).join('');
+  document.querySelectorAll('#skills input').forEach(i => i.addEventListener('change', updateRun));
+  updateRun();
+}
+function updateRun(){ const n = document.querySelectorAll('#skills input:checked').length; document.getElementById('runskills').textContent = `Run ${n} skill${n===1?'':'s'}`; }
+document.querySelectorAll('#presets button').forEach(b => b.addEventListener('click', () => { preset = b.dataset.p; renderSkills(); }));
+document.getElementById('closesheet').addEventListener('click', closeSheet);
+document.getElementById('scrim').addEventListener('click', closeSheet);
+document.getElementById('runskills').addEventListener('click', () => { const n = document.querySelectorAll('#skills input:checked').length; closeSheet(); toast(`Queued ${n} run${n===1?'':'s'} for ${cur.sym} · open Research ›`); });
+
+// toast
+let tt;
+function toast(msg, act, fn){ const t = document.getElementById('toast'); t.innerHTML = `<span>${msg}</span>${act?`<button>${act}</button>`:''}`; if (act) t.querySelector('button').addEventListener('click', () => { fn(); t.classList.remove('on'); }); t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 4000); }
+
+renderFunnel(); render(); renderRecord('60'); setDay();
+</script>
+</body>
+</html>

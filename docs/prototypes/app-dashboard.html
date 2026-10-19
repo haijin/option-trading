@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Option Desk prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Option_Trading redesign: a Home desk that shows the two market sessions and the state of the five modules (puts to sell, leaders at support, key news, research, reminders), plus one screen per module. Static sample data for review." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* Layout: a review document (max 1280 px) that holds phone frames (390 x 800) and one laptop frame (1180 wide).
+   The app UI inside the frames is namespaced .ui and built from the same tokens. */
+:root {
+  color-scheme: light;
+  --canvas: #f2f5f3;      /* mineral off-white, a touch of green */
+  --panel: #ffffff;
+  --panel2: #e7ece9;
+  --ink: #0f1f1a;         /* green-black */
+  --ink2: #3c4f48;
+  --muted: #65756e;
+  --line: #d8dfdb;
+  --line2: #c3cdc7;
+  --pine: #0f6e56;        /* the one action colour */
+  --pine-ink: #0a5a46;
+  --pine-soft: #dcefe6;
+  --up: #15804f;  --upbg: #dcf2e5;
+  --down: #c4432b; --downbg: #f9e3de;
+  --amber: #8f6210; --amberbg: #faefd2;
+  --sky: #2a64a8; --skybg: #e1ecf8;
+  --sans: "Schibsted Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Helvetica, Arial, sans-serif;
+  --mono: "Spline Sans Mono", ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --canvas: #0c1210; --panel: #131b18; --panel2: #1b2521; --ink: #e6ece9; --ink2: #c0cbc6; --muted: #8a988f;
+    --line: #233029; --line2: #314038; --pine: #3dba93; --pine-ink: #62ceab; --pine-soft: #143a2f;
+    --up: #4cc98b; --upbg: #143a2a; --down: #f08a74; --downbg: #3c1f1a; --amber: #e2b35a; --amberbg: #3a2c10; --sky: #7fb2ee; --skybg: #16304a;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #0c1210; --panel: #131b18; --panel2: #1b2521; --ink: #e6ece9; --ink2: #c0cbc6; --muted: #8a988f;
+  --line: #233029; --line2: #314038; --pine: #3dba93; --pine-ink: #62ceab; --pine-soft: #143a2f;
+  --up: #4cc98b; --upbg: #143a2a; --down: #f08a74; --downbg: #3c1f1a; --amber: #e2b35a; --amberbg: #3a2c10; --sky: #7fb2ee; --skybg: #16304a;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--canvas); color: var(--ink); font: 15px/1.5 var(--sans); -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; }
+a { color: var(--pine-ink); }
+svg { display: block; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* ---------- review document ---------- */
+.doc { max-width: 1280px; margin: 0 auto; padding-block: 28px 90px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.doc header.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.doc h1 { margin: 0; font-size: clamp(28px, 4vw, 40px); font-weight: 600; letter-spacing: -0.025em; line-height: 1.1; text-wrap: balance; }
+.doc h2 { margin: 64px 0 6px; font-size: 22px; font-weight: 600; letter-spacing: -0.015em; }
+.doc h3 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+.doc .lede { max-width: 62ch; margin: 14px 0 0; font-size: 17px; color: var(--ink2); }
+.doc p { max-width: 68ch; }
+.doc .note { color: var(--muted); font-size: 14px; margin: 0 0 18px; }
+.doc .toggle { border: 1px solid var(--line2); background: var(--panel); color: var(--ink); border-radius: 999px; padding: 7px 14px; font: 600 13px var(--sans); cursor: pointer; }
+.doc .toggle:focus-visible, .ui a:focus-visible, .ui button:focus-visible { outline: 2px solid var(--pine); outline-offset: 2px; }
+
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px 28px; margin-top: 14px; }
+.swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); gap: 8px; }
+.sw { height: 70px; border-radius: 8px; border: 1px solid var(--line); padding: 8px; display: flex; flex-direction: column; justify-content: flex-end; font-size: 11.5px; line-height: 1.3; }
+.sw small { opacity: 0.75; font-family: var(--mono); }
+.spec { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; background: var(--panel); display: grid; gap: 6px; }
+.spec .d { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; }
+.spec .m { font-family: var(--mono); font-size: 15px; }
+.spec small { color: var(--muted); }
+.navmap { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 14px 16px; }
+.navmap ul { margin: 6px 0 0; padding-left: 18px; }
+.navmap li { margin: 2px 0; }
+.navmap .was { color: var(--muted); text-decoration: line-through; }
+
+.frames { display: flex; gap: 28px; overflow-x: auto; padding-block: 10px 18px; scroll-snap-type: x proximity; }
+.frame { flex: 0 0 auto; width: min(390px, 100%); scroll-snap-align: start; display: grid; gap: 10px; }
+.frame figcaption { font-size: 13.5px; color: var(--ink2); max-width: 60ch; }
+.frame figcaption b { color: var(--ink); font-weight: 600; }
+figure { margin: 0; }
+.ph { width: 100%; height: 800px; border: 1px solid var(--line2); border-radius: 34px; background: var(--canvas); overflow: hidden; box-shadow: inset 0 0 0 6px var(--panel2); }
+.ph .ui { height: 100%; }
+.desk-wrap { overflow-x: auto; border: 1px solid var(--line2); border-radius: 12px; }
+.desk { width: 1180px; min-height: 820px; display: grid; grid-template-columns: 84px minmax(0, 1fr); background: var(--canvas); }
+
+.qs { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px; }
+.qcard { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--panel); font-size: 14px; }
+.qcard b { display: block; margin-bottom: 4px; }
+
+/* ---------- app UI ---------- */
+.ui { font: 14px/1.4 var(--sans); color: var(--ink); display: flex; flex-direction: column; background: var(--canvas); }
+.ui .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.ui a { color: inherit; text-decoration: none; }
+.ui button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.ui small { font-size: 12px; color: var(--muted); }
+.ui .hd { flex: 0 0 auto; padding: 16px 16px 10px; display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.ui .hd h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; }
+.ui .hd .sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.ui .hd .acts { display: flex; gap: 8px; flex: 0 0 auto; }
+.ui .ib { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; border: 1px solid var(--line); background: var(--panel); position: relative; color: var(--ink2); }
+.ui .ib .bdg { position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; border-radius: 9px; background: var(--down); color: #fff; font: 600 11px/18px var(--mono); text-align: center; padding: 0 5px; }
+.ui .btn { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line2); background: var(--panel); font-weight: 600; font-size: 13px; color: var(--ink); }
+.ui .btn.pri { background: var(--pine); border-color: var(--pine); color: #fff; }
+.ui .btn.sm { height: 28px; padding: 0 10px; font-size: 12.5px; border-radius: 8px; }
+.ui .bd { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 12px 20px; display: flex; flex-direction: column; gap: 12px; }
+.ui .bd > * { flex: 0 0 auto; }
+.ui .bd, .ui .tape { scrollbar-width: none; }
+.ui .bd::-webkit-scrollbar, .ui .tape::-webkit-scrollbar { display: none; }
+.ui .tb { flex: 0 0 auto; display: flex; justify-content: space-around; border-top: 1px solid var(--line); background: var(--panel); padding: 8px 4px 16px; }
+.ui .tb a { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10.5px; font-weight: 500; color: var(--muted); min-width: 60px; }
+.ui .tb a.on { color: var(--pine-ink); font-weight: 600; }
+.ui svg.ic { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.ui svg.ic.s { width: 16px; height: 16px; }
+
+/* chips and badges */
+.ui .chip { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.ui .chip.up { background: var(--upbg); color: var(--up); }
+.ui .chip.down { background: var(--downbg); color: var(--down); }
+.ui .chip.amber { background: var(--amberbg); color: var(--amber); }
+.ui .chip.sky { background: var(--skybg); color: var(--sky); }
+.ui .chip.ghost { background: var(--panel2); color: var(--ink2); }
+.ui .mk { font-size: 10px; font-weight: 600; border: 1px solid var(--line2); border-radius: 4px; padding: 0 4px; color: var(--muted); line-height: 15px; vertical-align: 2px; margin-left: 4px; }
+.ui .seg { display: inline-flex; border: 1px solid var(--line2); border-radius: 9px; overflow: hidden; background: var(--panel); }
+.ui .seg button { padding: 6px 11px; font-size: 12.5px; font-weight: 500; color: var(--muted); }
+.ui .seg button.on { background: var(--pine-soft); color: var(--pine-ink); font-weight: 600; }
+.ui .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.ui .pos { color: var(--up); } .ui .neg { color: var(--down); }
+
+/* session card (the Home hero) */
+.ui .sess { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px 10px; }
+.ui .sess .now { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 13.5px; }
+.ui .sess .now b { font-weight: 600; }
+.ui .band { position: relative; height: 26px; margin: 10px 0 2px; background: var(--panel2); border-radius: 6px; }
+.ui .band .blk { position: absolute; top: 5px; bottom: 5px; border-radius: 3px; background: var(--pine); color: #fff; font: 600 10px/16px var(--mono); padding-left: 5px; overflow: hidden; }
+.ui .band .blk.us { background: var(--pine); opacity: 0.45; }
+.ui .band .blk.closed { background: var(--line2); color: var(--ink2); opacity: 1; }
+.ui .band .nowm { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink); border-radius: 1px; }
+.ui .band .nowm::before { content: ""; position: absolute; top: -3px; left: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--ink); }
+.ui .ticks { position: relative; height: 14px; font: 10px/14px var(--mono); color: var(--muted); }
+.ui .ticks span { position: absolute; transform: translateX(-50%); }
+.ui .ticks span:first-child { transform: none; }
+.ui .ticks span:last-child { transform: translateX(-100%); }
+.ui .state { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.ui .state .k { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; color: var(--ink2); }
+.ui .meter { height: 6px; background: var(--panel2); border-radius: 3px; overflow: hidden; position: relative; margin-top: 4px; }
+.ui .meter i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--pine); border-radius: 3px; }
+.ui .meter em { position: absolute; top: -2px; bottom: -2px; width: 1px; background: var(--ink2); }
+
+/* module panel */
+.ui .mod { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.ui .mh { display: flex; align-items: center; gap: 8px; padding: 12px 14px 8px; }
+.ui .mh h2 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+.ui .mh .n { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--pine-ink); background: var(--pine-soft); padding: 1px 8px; border-radius: 999px; }
+.ui .mh .n.warn { color: var(--amber); background: var(--amberbg); }
+.ui .mh .open { margin-left: auto; color: var(--pine-ink); font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 2px; }
+.ui .mf { padding: 9px 14px 11px; font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--line); display: flex; gap: 6px 16px; flex-wrap: wrap; align-items: center; }
+.ui .mf .dist { display: inline-flex; gap: 2px; height: 6px; width: 110px; border-radius: 3px; overflow: hidden; }
+.ui .mf .dist i { display: block; height: 100%; }
+.ui .row { display: grid; padding: 9px 14px; border-top: 1px solid var(--line); gap: 2px 10px; align-items: center; text-align: left; width: 100%; }
+.ui .row .sym { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.ui .row .sym b { font-family: var(--mono); font-weight: 600; font-size: 14.5px; }
+.ui .row .sym small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ui .row .meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+.ui .row .meta b { color: var(--ink2); font-weight: 500; }
+
+/* puts */
+.ui .row.put { grid-template-columns: 16px minmax(0, 1fr) auto; grid-template-areas: "rk sym ret" ". ctr ret" ". meta ret"; }
+.ui .row.put .rk { grid-area: rk; font-family: var(--mono); font-size: 12px; color: var(--muted); align-self: start; padding-top: 3px; }
+.ui .row.put .sym { grid-area: sym; }
+.ui .row.put .ctr { grid-area: ctr; font-family: var(--mono); font-size: 13.5px; color: var(--ink); }
+.ui .row.put .ctr .d { color: var(--muted); margin-left: 8px; }
+.ui .row.put .meta { grid-area: meta; }
+.ui .row.put .ret { grid-area: ret; text-align: right; }
+.ui .row.put .ret b { display: block; font-family: var(--mono); font-size: 17px; font-weight: 600; color: var(--up); line-height: 1.1; }
+.ui .row.put .ret small { display: block; }
+
+/* leaders */
+.ui .row.ldr { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "sym st" "drop st" "q q"; }
+.ui .row.ldr .sym { grid-area: sym; }
+.ui .row.ldr .st { grid-area: st; align-self: start; }
+.ui .row.ldr .drop { grid-area: drop; font-size: 12.5px; color: var(--ink2); display: flex; gap: 10px; flex-wrap: wrap; }
+.ui .row.ldr .drop b { font-family: var(--mono); font-weight: 600; color: var(--ink); }
+.ui .row.ldr .q { grid-area: q; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.ui .qbar { display: inline-flex; gap: 2px; }
+.ui .qbar i { width: 9px; height: 8px; border-radius: 2px; background: var(--up); }
+.ui .qbar i.x { background: var(--line2); }
+
+/* news */
+.ui .row.nw { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+.ui .row.nw .l1 { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.ui .row.nw .l1 b { font-family: var(--mono); color: var(--ink); font-weight: 600; font-size: 13px; }
+.ui .row.nw .l1 .t { margin-left: auto; white-space: nowrap; }
+.ui .row.nw .h { font-size: 14px; font-weight: 500; color: var(--ink); line-height: 1.3; }
+.ui .row.nw .w { font-size: 12.5px; color: var(--ink2); line-height: 1.35; }
+.ui .imp { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 4px; }
+.ui .imp.blocks { background: var(--downbg); color: var(--down); }
+.ui .imp.caution { background: var(--amberbg); color: var(--amber); }
+.ui .imp.supports { background: var(--upbg); color: var(--up); }
+.ui .imp.neutral { background: var(--panel2); color: var(--muted); }
+.ui .brief { padding: 10px 14px 12px; border-top: 1px solid var(--line); display: grid; gap: 8px; }
+.ui .brief .lead { font-size: 14px; line-height: 1.4; }
+.ui .brief .tape { display: flex; gap: 12px; overflow-x: auto; font: 12px var(--mono); color: var(--ink2); padding-bottom: 2px; white-space: nowrap; }
+.ui .brief ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 5px; font-size: 13px; }
+.ui .brief li { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 8px; }
+.ui .brief li span:first-child { font: 600 11px/18px var(--mono); color: var(--muted); }
+.ui .brief .fp { font-size: 13px; color: var(--pine-ink); font-weight: 500; }
+
+/* research */
+.ui .run { padding: 10px 14px 12px; border-top: 1px solid var(--line); display: grid; gap: 6px; }
+.ui .run .l1 { display: flex; align-items: center; gap: 8px; }
+.ui .run .l1 b { font-family: var(--mono); font-weight: 600; }
+.ui .steps { display: flex; gap: 3px; }
+.ui .steps i { flex: 1; height: 5px; border-radius: 2px; background: var(--line2); }
+.ui .steps i.done { background: var(--pine); }
+.ui .steps i.now { background: var(--pine); opacity: 0.5; }
+.ui .row.rp { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "sym v" "sk v"; }
+.ui .row.rp .sym { grid-area: sym; }
+.ui .row.rp .sk { grid-area: sk; font-size: 12.5px; color: var(--ink2); }
+.ui .row.rp .sk small { margin-left: 6px; }
+.ui .row.rp .v { grid-area: v; text-align: right; display: grid; gap: 3px; justify-items: end; }
+.ui .spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--pine-soft); border-top-color: var(--pine); animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ui .spin { animation: none; } }
+
+/* reminders */
+.ui .gh { padding: 8px 14px 2px; font-size: 12px; font-weight: 600; color: var(--muted); border-top: 1px solid var(--line); }
+.ui .gh + .row { border-top: 0; }
+.ui .row.rm { grid-template-columns: 50px minmax(0, 1fr) auto; grid-template-areas: "d t tag" "d w tag"; align-items: start; }
+.ui .row.rm .d { grid-area: d; font-family: var(--mono); font-size: 12px; color: var(--ink2); line-height: 1.25; }
+.ui .row.rm .d b { display: block; font-size: 15px; font-weight: 600; color: var(--ink); }
+.ui .row.rm .t { grid-area: t; font-size: 14px; font-weight: 500; line-height: 1.3; }
+.ui .row.rm .t b { font-family: var(--mono); font-weight: 600; }
+.ui .row.rm .w { grid-area: w; font-size: 12.5px; color: var(--ink2); line-height: 1.35; }
+.ui .row.rm .tag { grid-area: tag; }
+.ui .row.rm.hot { box-shadow: inset 3px 0 0 var(--down); }
+.ui .tag { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 4px; background: var(--panel2); color: var(--ink2); white-space: nowrap; }
+.ui .tag.results { background: var(--amberbg); color: var(--amber); }
+.ui .tag.expiry { background: var(--skybg); color: var(--sky); }
+.ui .tag.news { background: var(--pine-soft); color: var(--pine-ink); }
+.ui .tag.alert { background: var(--downbg); color: var(--down); }
+.ui .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 0 2px; }
+.ui .days span { text-align: center; font: 11px/1.2 var(--mono); color: var(--muted); padding: 6px 0 4px; border-radius: 8px; background: var(--panel); border: 1px solid var(--line); }
+.ui .days span b { display: block; font-size: 14px; color: var(--ink); font-weight: 600; }
+.ui .days span i { display: inline-block; width: 5px; height: 5px; border-radius: 50%; margin: 3px 1px 0; background: var(--line2); }
+.ui .days span i.r { background: var(--amber); } .ui .days span i.e { background: var(--sky); } .ui .days span i.a { background: var(--down); }
+.ui .days span.today { border-color: var(--pine); background: var(--pine-soft); }
+
+/* funnel */
+.ui .funnel { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); padding: 0 14px 10px; }
+.ui .funnel b { font-family: var(--mono); color: var(--ink); font-weight: 600; }
+.ui .funnel .arr { color: var(--line2); }
+
+/* expanded leader plan */
+.ui .plan { padding: 8px 14px 12px; border-top: 1px dashed var(--line); background: var(--canvas); display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 12px; }
+.ui .plan div { font-size: 11.5px; color: var(--muted); }
+.ui .plan div b { display: block; font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--ink); }
+.ui .plan .acts { grid-column: 1 / -1; display: flex; gap: 8px; margin-top: 2px; }
+
+/* desktop frame */
+.desk .rail { background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 2px; padding: 14px 8px; }
+.desk .rail .wm { width: 34px; height: 34px; border-radius: 10px; background: var(--pine); color: #fff; display: grid; place-items: center; font: 700 12px var(--mono); margin: 0 auto 12px; }
+.desk .rail a { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 2px; border-radius: 10px; font-size: 10.5px; font-weight: 500; color: var(--muted); }
+.desk .rail a.on { background: var(--pine-soft); color: var(--pine-ink); font-weight: 600; }
+.desk .rail .sp { flex: 1; }
+.desk .main { display: flex; flex-direction: column; min-width: 0; }
+.desk .dhd { display: grid; grid-template-columns: auto minmax(300px, 1fr) auto; gap: 28px; align-items: center; padding: 14px 22px; background: var(--panel); border-bottom: 1px solid var(--line); }
+.desk .dhd h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
+.desk .dhd .sub { font-size: 12.5px; color: var(--muted); }
+.desk .dhd .sess { border: 0; padding: 0; background: none; }
+.desk .dhd .sess .band { margin-top: 0; }
+.desk .dhd .acts { display: flex; gap: 8px; align-items: center; }
+.desk .grid { padding: 18px 22px 24px; display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; align-content: start; }
+.desk .c7 { grid-column: span 7; } .desk .c5 { grid-column: span 5; } .desk .c12 { grid-column: span 12; }
+.desk .c12 .row.rp { grid-template-columns: minmax(0, 1fr) auto; }
+.desk .rp-grid { display: grid; grid-template-columns: 1fr 1fr; }
+.desk .rp-grid .row { border-top: 1px solid var(--line); }
+.desk .dhd > div:first-child { white-space: nowrap; }
+.desk .state { grid-template-columns: repeat(2, minmax(170px, auto)); gap: 6px 18px; margin: 0; padding: 0; border: 0; }
+.desk .state .k { gap: 10px; }
+.desk .state .k span { white-space: nowrap; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-puts" viewBox="0 0 24 24"><path d="M4 5h16v5a2 2 0 0 0 0 4v5H4v-5a2 2 0 0 0 0-4z"/><path d="M12 9v6M9.5 12.5L12 15l2.5-2.5"/></symbol>
+  <symbol id="i-leaders" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></symbol>
+  <symbol id="i-news" viewBox="0 0 24 24"><path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/><path d="M7 9h6M7 13h7M7 17h4"/></symbol>
+  <symbol id="i-research" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/><path d="M7.5 15h9"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></symbol>
+  <symbol id="i-watch" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-positions" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-journal" viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 0-3 3z"/><path d="M5 4v16"/></symbol>
+  <symbol id="i-data" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+</svg>
+
+<div class="doc">
+  <header class="top">
+    <div>
+      <h1>Option Desk: Home and the five modules</h1>
+      <p class="lede">A redesign proposal for Option_Trading. Home is the desk you open before each market: the two sessions on one clock, then the state of every module in the order you read them. Static sample data, Friday 17 October 2026, 08:40 Hong Kong time.</p>
+    </div>
+    <button class="toggle" id="theme" type="button">Dark theme</button>
+  </header>
+
+  <h2>Direction</h2>
+  <p class="note">What changes and why, before the screens.</p>
+  <div class="cols">
+    <div>
+      <h3>Colour</h3>
+      <div class="swatches">
+        <div class="sw" style="background:var(--canvas)">Canvas<small>mineral grey</small></div>
+        <div class="sw" style="background:var(--pine);color:#fff">Pine<small>the action colour</small></div>
+        <div class="sw" style="background:var(--upbg);color:var(--up)">Up, sell, pass<small>semantic</small></div>
+        <div class="sw" style="background:var(--amberbg);color:var(--amber)">Wait, results<small>semantic</small></div>
+        <div class="sw" style="background:var(--downbg);color:var(--down)">Blocks, alerts<small>semantic</small></div>
+        <div class="sw" style="background:var(--skybg);color:var(--sky)">Open puts, expiry<small>semantic</small></div>
+      </div>
+      <p class="note" style="margin-top:10px">One action colour instead of three WhatsApp greens. The four semantic colours mean the same thing on every module: green is a verdict in your favour, amber is a date or a wait, red blocks or alerts, blue is money already at work.</p>
+    </div>
+    <div>
+      <h3>Type</h3>
+      <div class="spec">
+        <div class="d">Puts to sell before the HK open</div>
+        <small>Schibsted Grotesk for everything you read</small>
+        <div class="m">1299 27 Nov 62.5 P  0.21Δ  18.6%</div>
+        <small>Spline Sans Mono for tickers, contracts and every number that lines up</small>
+      </div>
+      <p class="note" style="margin-top:10px">Numbers are the content of this app, so the mono face carries them everywhere, and the sans stays for words. No all-caps labels and no decorative numbering: the only numbers in the margins are real ranks.</p>
+    </div>
+    <div>
+      <h3>Navigation</h3>
+      <div class="navmap">
+        <b>Phone: five tabs, a bell, and More</b>
+        <ul>
+          <li>Home (new): the desk</li>
+          <li>Puts (was Today)</li>
+          <li>Leaders</li>
+          <li>News</li>
+          <li>Research</li>
+          <li>Bell in the header: Reminders, with the count due today</li>
+          <li>More in the header: Watchlist, Positions, Journal, Backtests, Data, Settings</li>
+          <li><span class="was">Nine tabs</span>, <span class="was">Run scan in every header</span> (it moves into the Puts panel)</li>
+        </ul>
+        <p class="note" style="margin:8px 0 0">On a laptop the rail lists every page. Positions and Watchlist are still one tap from Home: the capital meters open Positions, every ticker opens its stock.</p>
+      </div>
+    </div>
+  </div>
+
+  <h2>Home on the phone</h2>
+  <p class="note">Scroll inside the frame. The session clock is the fixed point; each module below it is the same panel shape: a name, the one number that matters, the top three rows, and a footer that accounts for the rest.</p>
+  <div class="frames">
+    <figure class="frame">
+      <div class="ph"><div class="ui" id="home-phone"></div></div>
+      <figcaption><b>Home.</b> Reads top to bottom in under a minute: when the next market opens, what regime and capital you are working with, then puts, leaders, news, research, reminders. Every panel header opens its module; every ticker opens that stock.</figcaption>
+    </figure>
+  </div>
+
+  <h2>Home on a laptop</h2>
+  <p class="note">Same panels, two columns, five rows per panel instead of three. The session clock sits in the header with the regime and capital meters.</p>
+  <div class="desk-wrap"><div class="desk" id="home-desk"></div></div>
+
+  <h2>The five modules</h2>
+  <p class="note">One screen each. Puts, Leaders, News and Research are the existing pages restyled and reordered around a verdict; Reminders is new.</p>
+  <div class="frames" id="modules">
+    <figure class="frame">
+      <div class="ph"><div class="ui" id="pg-puts"></div></div>
+      <figcaption><b>Puts.</b> The scan's verdicts as four groups you can switch between: sell, wait, avoid, open. Each sell row shows the contract, the annualised return, delta, cushion and size; a wait row says the one rule that holds it and the date it clears.</figcaption>
+    </figure>
+    <figure class="frame">
+      <div class="ph"><div class="ui" id="pg-leaders"></div></div>
+      <figcaption><b>Leaders.</b> Good businesses that have dropped to a support. Each row carries the drop from the high, the base length, the support in play and the quality screen (seven filters) so the two halves of the idea sit together. Open a row for the plan: entry, stop, shares, 3R.</figcaption>
+    </figure>
+    <figure class="frame">
+      <div class="ph"><div class="ui" id="pg-news"></div></div>
+      <figcaption><b>News.</b> The morning brief first, then only stories that touch your names, each read against your standing in that name: supports, caution or blocks the put. Scope switches between shortlist, open puts and all watched.</figcaption>
+    </figure>
+    <figure class="frame">
+      <div class="ph"><div class="ui" id="pg-research"></div></div>
+      <figcaption><b>Research.</b> What is running now, then reports by stock with the skill's verdict in one chip. Start research from a preset; the quality screen is local and free, the others show their cost before they run.</figcaption>
+    </figure>
+    <figure class="frame">
+      <div class="ph"><div class="ui" id="pg-remind"></div></div>
+      <figcaption><b>Reminders.</b> A fortnight strip, then the dates and news that matter to a put seller: results announcements, expiries, ex-dividend days, position alerts and key news on shortlist names. Each line says why it concerns you: an open put, a recommended put, or a name you watch.</figcaption>
+    </figure>
+  </div>
+
+  <h2>For your review</h2>
+  <div class="qs">
+    <div class="qcard"><b>Leaders definition</b>Your brief says "good fundamentals with a recent drop". The built Leaders list is Martin Luk's momentum method (top-quartile gainers at a pullback). The prototype shows both halves on each row and lets the quality screen gate the shortlist, so a name that fails the seven filters cannot be a Setup. Say if you want the momentum requirement dropped altogether.</div>
+    <div class="qcard"><b>Reminders data</b>Results dates come from the stored corporate events (Yahoo, often blank for HK names), expiries from your positions and the scan, alerts from the mark job, key news from the classified stories. Push notifications are the existing Telegram or email channels at 08:00 HKT; nothing new to set up.</div>
+    <div class="qcard"><b>Visual identity</b>This drops the WhatsApp palette and Inter for a single pine action colour and Schibsted Grotesk. Phone-first, light and dark, bottom tabs and one pane at a time all stay. If you would rather keep the current look, the Home layout and the Reminders module work unchanged on it.</div>
+    <div class="qcard"><b>Scope of change</b>Home and Reminders are new pages and a new aggregate endpoint. The other four screens are restyles of pages that exist; their data and rules do not change. Nothing in the app is modified until you approve.</div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var btn = document.getElementById('theme');
+  function label() {
+    var dark = root.getAttribute('data-theme') === 'dark' || (!root.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+    btn.textContent = dark ? 'Light theme' : 'Dark theme';
+  }
+  try { var saved = localStorage.getItem('desk-theme'); if (saved) root.setAttribute('data-theme', saved); } catch (e) {}
+  label();
+  btn.addEventListener('click', function () {
+    var dark = btn.textContent === 'Dark theme';
+    root.setAttribute('data-theme', dark ? 'dark' : 'light');
+    try { localStorage.setItem('desk-theme', dark ? 'dark' : 'light'); } catch (e) {}
+    label();
+  });
+})();
+
+/* ---------- sample data (Fri 17 Oct 2026, 08:40 HKT) ---------- */
+var ideas = [
+  { rk: 1, sym: 'JPM', name: 'JPMorgan', mk: 'US', ctr: '20 Nov 290 P', dte: 34, delta: '0.19', ann: '15.1%', cush: '8.2%', size: '1 contract', pct: '7% of equity', credit: 'US$ 412' },
+  { rk: 2, sym: '1299', name: 'AIA Group', mk: 'HK', ctr: '27 Nov 62.5 P', dte: 41, delta: '0.21', ann: '18.6%', cush: '9.0%', size: '2 contracts', pct: '11% of equity', credit: 'HK$ 2,860' },
+  { rk: 3, sym: '3690', name: 'Meituan', mk: 'HK', ctr: '27 Nov 95 P', dte: 41, delta: '0.22', ann: '24.3%', cush: '10.5%', size: '1 contract', pct: '4% of equity', credit: 'HK$ 1,190' },
+  { rk: 4, sym: 'PEP', name: 'PepsiCo', mk: 'US', ctr: '20 Nov 140 P', dte: 34, delta: '0.18', ann: '12.9%', cush: '9.6%', size: '1 contract', pct: '6% of equity', credit: 'US$ 168' },
+  { rk: 5, sym: '0388', name: 'HKEX', mk: 'HK', ctr: '29 Oct 400 P', dte: 12, delta: '0.17', ann: '16.4%', cush: '7.1%', size: '1 contract', pct: '3% of equity', credit: 'HK$ 540' }
+];
+var waits = [
+  { sym: 'KO', name: 'Coca-Cola', mk: 'US', why: 'Results Tue 21 Oct inside the window', clears: 'Scan again Wed 22 Oct' },
+  { sym: '0700', name: 'Tencent', mk: 'HK', why: 'Results 12 Nov before the 27 Nov expiry', clears: 'Open put already held' },
+  { sym: 'MSFT', name: 'Microsoft', mk: 'US', why: 'Results Wed 28 Oct inside the window', clears: 'Scan again Thu 29 Oct' },
+  { sym: 'NVDA', name: 'Nvidia', mk: 'US', why: 'IV rank 18, premium too thin', clears: 'Needs IV rank above 30' }
+];
+var leaders = [
+  { sym: 'NVDA', name: 'Nvidia', mk: 'US', drop: '12%', base: '19', sup: 'at EMA21', q: 7, stop: '2.4%', st: 'Setup', px: '178.40', chg: '+1.8%' },
+  { sym: '1810', name: 'Xiaomi', mk: 'HK', drop: '18%', base: '27', sup: 'at AVWAP', q: 5, stop: '2.9%', st: 'Setup', px: '47.15', chg: '+2.3%' },
+  { sym: '0388', name: 'HKEX', mk: 'HK', drop: '9%', base: '14', sup: 'at EMA21', q: 7, stop: '2.1%', st: 'Setup', px: '431.0', chg: '+0.6%' },
+  { sym: 'AVGO', name: 'Broadcom', mk: 'US', drop: '14%', base: '22', sup: 'at EMA50', q: 6, stop: '2.8%', st: 'Setup', px: '318.20', chg: '+1.1%' },
+  { sym: '1211', name: 'BYD', mk: 'HK', drop: '16%', base: '25', sup: 'near EMA50', q: 7, stop: '3.4%', st: 'Watch', px: '101.3', chg: '-0.4%' },
+  { sym: '3690', name: 'Meituan', mk: 'HK', drop: '22%', base: '31', sup: 'below EMA50', q: 6, stop: '3.1%', st: 'Watch', px: '106.1', chg: '-1.2%' },
+  { sym: 'NFLX', name: 'Netflix', mk: 'US', drop: '11%', base: '12', sup: 'at EMA21', q: 6, stop: '2.6%', st: 'Watch', px: '1,142', chg: '+0.3%' }
+];
+var stories = [
+  { imp: 'blocks', sym: 'TSLA', src: 'CNBC', t: '06:10', h: 'Q3 deliveries miss consensus by 4%, Wednesday results now the risk event', w: 'Your 20 Nov 380 put expires after the results; the events rule would block it today.' },
+  { imp: 'caution', sym: '0700', src: 'HKEXnews', t: '07:12', h: 'Prosus says it will keep selling Tencent shares daily under its programme', w: 'Overhang on a name where you hold the 29 Oct 540 put; spot is 7.5% above the strike.' },
+  { imp: 'supports', sym: 'JPM', src: 'Yahoo Finance', t: '04:40', h: 'Q3 beat, credit costs guided flat, dividend raised to $1.50', w: 'Supports the recommended 20 Nov 290 put: results are out of the way and the fundamentals gate passes.' },
+  { imp: 'neutral', sym: '1299', src: 'HKEXnews', t: '07:30', h: 'AIA buys back HK$1.2bn of shares this week', w: 'No rule touched; buyback pace unchanged from September.' },
+  { imp: 'caution', sym: '3690', src: 'Yahoo Finance', t: '05:55', h: 'Report of a subsidy truce between Meituan and JD in food delivery', w: 'Positive if confirmed, but unconfirmed reports do not move the fundamentals gate.' }
+];
+var runs = [
+  { sym: 'BILI', name: 'Bilibili', mk: 'US', skill: '巴菲特买入前Checklist', en: 'Buffett checklist', step: 3, of: 6, label: 'Collecting moat evidence', mins: '4 min' }
+];
+var reports = [
+  { sym: 'NVDA', mk: 'US', skill: 'Leader check', en: '3 skills', v: 'Thesis intact', kind: 'up', when: 'Mon 13 Oct', cost: 'US$ 0.90' },
+  { sym: '0700', mk: 'HK', skill: '四大师综合分析', en: 'Four-masters memo', v: 'Buy below 520', kind: 'amber', when: 'Tue 14 Oct', cost: 'US$ 3.60' },
+  { sym: 'JPM', mk: 'US', skill: '财报精读', en: 'Earnings read', v: 'Beat, guidance flat', kind: 'up', when: 'Wed 15 Oct', cost: 'US$ 1.10' },
+  { sym: '1810', mk: 'HK', skill: '去劣筛选', en: 'Quality screen', v: 'Pass 5 of 7', kind: 'amber', when: 'Thu 16 Oct', cost: 'free' },
+  { sym: '9618', mk: 'HK', skill: '去劣筛选', en: 'Quality screen', v: 'Fail, FCF negative', kind: 'down', when: 'Thu 16 Oct', cost: 'free' }
+];
+var reminders = [
+  { g: 'Today', d: 'Fri', n: '17', t: '<b>0700</b> repurchased 1.0m shares, HKEX notice 07:12', w: 'Open put 29 Oct 540; spot 584.', tag: 'news', hot: false },
+  { g: 'Today', d: 'Fri', n: '17', t: '<b>0700</b> 29 Oct 540 P has earned 52% of its credit', w: 'Your rule says consider closing at 50%.', tag: 'alert', hot: true },
+  { g: 'Next week', d: 'Tue', n: '21', t: '<b>KO</b> results before the US open', w: 'The scan holds the 20 Nov 65 put until it reports.', tag: 'results', hot: false },
+  { g: 'Next week', d: 'Wed', n: '22', t: '<b>TSLA</b> results after the US close', w: 'Open put 20 Nov 380 expires after the results.', tag: 'results', hot: true },
+  { g: 'Later', d: 'Tue', n: '28', t: '<b>MSFT</b> and <b>0005</b> report', w: 'Both watched, neither on the shortlist.', tag: 'results', hot: false },
+  { g: 'Later', d: 'Thu', n: '29', t: 'HK October expiry: <b>0700</b> 540 P and <b>0388</b> 400 P settle', w: 'The day before the last business day of the month.', tag: 'expiry', hot: false },
+  { g: 'Later', d: 'Thu', n: '30', t: '<b>AAPL</b> results after the US close', w: 'Open put 20 Nov 230 expires after the results.', tag: 'results', hot: false },
+  { g: 'Later', d: 'Wed', n: '12 Nov', t: '<b>0700</b> Q3 results', w: 'Confirmed by HKEX board-meeting notice.', tag: 'results', hot: false },
+  { g: 'Later', d: 'Fri', n: '14 Nov', t: '<b>9988</b> results', w: 'Open put 27 Nov 130 expires after the results.', tag: 'results', hot: false },
+  { g: 'Later', d: 'Thu', n: '20 Nov', t: 'US November expiry: <b>TSLA</b> 380 P, <b>AAPL</b> 230 P', w: 'Plus JPM 290 P and PEP 140 P if sold.', tag: 'expiry', hot: false }
+];
+
+/* ---------- small helpers ---------- */
+function ic(name, cls) { return '<svg class="ic' + (cls ? ' ' + cls : '') + '" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
+function sym(s) { return '<span class="sym"><b>' + s.sym + '</b><small>' + s.name + '</small><span class="mk">' + s.mk + '</span></span>'; }
+function qbar(n) { var h = ''; for (var i = 0; i < 7; i++) h += '<i' + (i < n ? '' : ' class="x"') + '></i>'; return '<span class="qbar">' + h + '</span>'; }
+function pct(t) { return (t / 24 * 100).toFixed(2) + '%'; }
+
+function sessionBand() {
+  return '<div class="band" role="img" aria-label="Hong Kong trades 09:30 to 12:00 and 13:00 to 16:00; the US session runs 21:30 to 04:00 Hong Kong time; now 08:40">' +
+    '<span class="blk us" style="left:0;width:' + pct(4) + '">US</span>' +
+    '<span class="blk" style="left:' + pct(9.5) + ';width:' + pct(2.5) + '">HK</span>' +
+    '<span class="blk" style="left:' + pct(13) + ';width:' + pct(3) + '">HK</span>' +
+    '<span class="blk us" style="left:' + pct(21.5) + ';width:' + pct(2.5) + '">US</span>' +
+    '<span class="nowm" style="left:' + pct(8.67) + '"></span></div>' +
+    '<div class="ticks"><span>00:00</span><span style="left:25%">06:00</span><span style="left:50%">12:00</span><span style="left:75%">18:00</span><span style="left:100%">24:00</span></div>';
+}
+function sessionCard(desk) {
+  return '<section class="sess" aria-label="Sessions and capital">' +
+    '<div class="now"><span><b>HK opens in 50 min</b></span><span class="mono">08:40 HKT</span></div>' +
+    sessionBand() +
+    (desk ? '' : stateGrid()) +
+    '</section>';
+}
+function stateGrid() {
+  return '<div class="state">' +
+    '<div><div class="k"><span>US regime</span><span class="chip up">bull, calm</span></div><small>VIX 20, cap 60%</small></div>' +
+    '<div><div class="k"><span>HK regime</span><span class="chip amber">neutral</span></div><small>VHSI 24, cap 40%</small></div>' +
+    '<div><div class="k"><span>US deployed</span><span class="mono">38% of 60%</span></div><div class="meter"><i style="width:63%"></i></div></div>' +
+    '<div><div class="k"><span>HK deployed</span><span class="mono">22% of 40%</span></div><div class="meter"><i style="width:55%"></i></div></div>' +
+    '</div>';
+}
+
+/* ---------- module panels (Home) ---------- */
+function putRow(s) {
+  return '<a class="row put" href="#puts"><span class="rk">' + s.rk + '</span>' + sym(s) +
+    '<span class="ctr">' + s.ctr + '<span class="d">' + s.delta + 'Δ</span></span>' +
+    '<span class="meta"><span>cushion <b>' + s.cush + '</b></span><span>' + s.dte + ' dte</span><span>' + s.size + '</span></span>' +
+    '<span class="ret"><b>' + s.ann + '</b><small>ann. return</small></span></a>';
+}
+function putsPanel(limit) {
+  return '<section class="mod" aria-label="Puts to sell"><div class="mh"><h2>Puts to sell</h2><span class="n">5</span><a class="open" href="#puts">Open' + ic('chev', 's') + '</a></div>' +
+    ideas.slice(0, limit).map(putRow).join('') +
+    '<div class="mf"><span class="dist" aria-hidden="true"><i style="width:28%;background:var(--up)"></i><i style="width:50%;background:var(--amber)"></i><i style="width:11%;background:var(--down)"></i><i style="width:11%;background:var(--sky)"></i></span>' +
+    '<span>5 sell</span><span>9 wait, 7 of them results</span><span>2 avoid</span><span>4 open</span><span style="margin-left:auto">scan 07:58</span></div></section>';
+}
+function ldrRow(s, expanded) {
+  var st = s.st === 'Setup' ? 'up' : 'amber';
+  return '<a class="row ldr" href="#leaders">' + sym(s) +
+    '<span class="chip ' + st + ' st">' + s.st + '</span>' +
+    '<span class="drop"><span><b>' + s.drop + '</b> off high</span><span><b>' + s.base + '</b>-day base</span><span>' + s.sup + '</span></span>' +
+    '<span class="q">' + qbar(s.q) + '<span>quality ' + s.q + ' of 7</span><span>stop ' + s.stop + '</span></span></a>' +
+    (expanded ? '<div class="plan"><div>Entry<b>178.40</b></div><div>Stop<b>174.10</b></div><div>Risk<b>0.5% eq</b></div><div>Shares<b>58</b></div><div>3R<b>191.30</b></div><div>5R<b>199.90</b></div>' +
+      '<div class="acts"><button class="btn sm pri" type="button">Investigate</button><button class="btn sm" type="button">Add to watchlist</button><button class="btn sm" type="button">Chart</button></div></div>' : '');
+}
+function leadersPanel(limit) {
+  return '<section class="mod" aria-label="Leaders at support"><div class="mh"><h2>Leaders at support</h2><span class="n">7 setups</span><a class="open" href="#leaders">Open' + ic('chev', 's') + '</a></div>' +
+    leaders.slice(0, limit).map(function (s) { return ldrRow(s, false); }).join('') +
+    '<div class="mf"><span>13 watch</span><span>3 new today</span><span>3 dropped</span><span style="margin-left:auto">entries allowed</span></div></section>';
+}
+function newsRow(s) {
+  var word = s.imp.charAt(0).toUpperCase() + s.imp.slice(1);
+  return '<a class="row nw" href="#news"><span class="l1"><span class="imp ' + s.imp + '">' + word + '</span><b>' + s.sym + '</b><span>' + s.src + '</span><span class="t">' + s.t + '</span></span>' +
+    '<span class="h">' + s.h + '</span><span class="w">' + s.w + '</span></a>';
+}
+function newsPanel(limit) {
+  return '<section class="mod" aria-label="Key news"><div class="mh"><h2>Key news</h2><span class="n warn">1 blocking</span><a class="open" href="#news">Open' + ic('chev', 's') + '</a></div>' +
+    '<div class="brief"><div class="lead">US closed mixed on Thursday: S&amp;P 500 down 0.2% on regional-bank credit worries, Nasdaq flat. HSI futures point 0.8% lower. VIX at 20 is the highest since June, so US premium is richer while the regime stays bull, calm.</div>' +
+    '<div class="tape"><span>SPX 6,612 -0.2%</span><span>NDX 24,410 0.0%</span><span>HSI fut 25,840 -0.8%</span><span>VIX 20.1</span><span>VHSI 24.3</span><span>UST10 4.02%</span><span>USDCNH 7.11</span></div></div>' +
+    stories.slice(0, limit).map(newsRow).join('') +
+    '<div class="mf"><span>8 stories on 6 names since yesterday</span><span style="margin-left:auto">fetched 08:05</span></div></section>';
+}
+function runBlock(r) {
+  var steps = ''; for (var i = 0; i < r.of; i++) steps += '<i class="' + (i < r.step - 1 ? 'done' : i === r.step - 1 ? 'now' : '') + '"></i>';
+  return '<div class="run"><div class="l1"><span class="spin" aria-hidden="true"></span><b>' + r.sym + '</b><span>' + r.skill + '<small> ' + r.en + '</small></span><span class="chip ghost" style="margin-left:auto">' + r.mins + '</span></div>' +
+    '<div class="steps">' + steps + '</div><small>Step ' + r.step + ' of ' + r.of + ': ' + r.label + '</small></div>';
+}
+function rpRow(r) {
+  return '<a class="row rp" href="#research"><span class="sym"><b>' + r.sym + '</b><span class="mk">' + r.mk + '</span></span>' +
+    '<span class="sk">' + r.skill + '<small>' + r.en + '</small></span>' +
+    '<span class="v"><span class="chip ' + r.kind + '">' + r.v + '</span><small>' + r.when + '</small></span></a>';
+}
+function researchPanel(limit) {
+  return '<section class="mod" aria-label="Research"><div class="mh"><h2>Research</h2><span class="n">1 running</span><a class="open" href="#research">Open' + ic('chev', 's') + '</a></div>' +
+    runs.map(runBlock).join('') + reports.slice(0, limit).map(rpRow).join('') +
+    '<div class="mf"><span>5 reports this week</span><span>quality screen: 12 of 18 watched pass</span><span style="margin-left:auto">US$ 5.60 this week</span></div></section>';
+}
+function rmRow(r) {
+  var tag = { news: 'Key news', alert: 'Alert', results: 'Results', expiry: 'Expiry' }[r.tag];
+  return '<a class="row rm' + (r.hot ? ' hot' : '') + '" href="#reminders"><span class="d"><b>' + r.n + '</b>' + r.d + '</span><span class="t">' + r.t + '</span><span class="w">' + r.w + '</span><span class="tag ' + r.tag + '">' + tag + '</span></a>';
+}
+function rmList(items) {
+  var out = '', g = null;
+  items.forEach(function (r) { if (r.g !== g) { g = r.g; out += '<div class="gh">' + g + '</div>'; } out += rmRow(r); });
+  return out;
+}
+function remindPanel(limit) {
+  return '<section class="mod" aria-label="Reminders"><div class="mh"><h2>Reminders</h2><span class="n warn">2 today</span><a class="open" href="#reminders">Open' + ic('chev', 's') + '</a></div>' +
+    rmList(reminders.slice(0, limit)) +
+    '<div class="mf"><span>' + (reminders.length - limit) + ' more in the next 30 days</span><span>sent to Telegram at 08:00</span></div></section>';
+}
+
+/* ---------- phone screens ---------- */
+function tabbar(on) {
+  var tabs = [['home', 'Home'], ['puts', 'Puts'], ['leaders', 'Leaders'], ['news', 'News'], ['research', 'Research']];
+  return '<nav class="tb" aria-label="Main">' + tabs.map(function (t) { return '<a href="#' + t[0] + '"' + (t[0] === on ? ' class="on" aria-current="page"' : '') + '>' + ic(t[0]) + '<span>' + t[1] + '</span></a>'; }).join('') + '</nav>';
+}
+function header(title, sub, acts) {
+  return '<header class="hd"><div><h1>' + title + '</h1>' + (sub ? '<div class="sub">' + sub + '</div>' : '') + '</div><div class="acts">' + (acts || '') + '</div></header>';
+}
+var bellMore = '<a class="ib" href="#reminders" aria-label="Reminders, 2 due today">' + ic('bell') + '<span class="bdg">2</span></a><button class="ib" type="button" aria-label="More pages">' + ic('more') + '</button>';
+
+document.getElementById('home-phone').innerHTML =
+  header('Friday 17 October', 'Before the HK open', bellMore) +
+  '<div class="bd">' + sessionCard(false) + putsPanel(3) + leadersPanel(3) + newsPanel(3) + researchPanel(2) + remindPanel(4) + '</div>' + tabbar('home');
+
+document.getElementById('pg-puts').innerHTML =
+  header('Puts', 'Scan 07:58, prices as of Thu 16 Oct', '<button class="btn pri" type="button">' + ic('scan', 's') + 'Run scan</button>') +
+  '<div class="bd"><div class="filters"><div class="seg"><button class="on" type="button">Sell 5</button><button type="button">Wait 9</button><button type="button">Avoid 2</button><button type="button">Open 4</button></div></div>' +
+  '<section class="mod" aria-label="Sell"><div class="mh"><h2>Sell</h2><span class="n">5</span><small style="margin-left:auto">ranked by composite</small></div>' + ideas.map(putRow).join('') +
+  '<div class="mf"><span>Credit if all five fill: US$ 580 + HK$ 4,590</span><span>uses 31% of remaining cap</span></div></section>' +
+  '<section class="mod" aria-label="Wait"><div class="mh"><h2>Wait</h2><span class="n warn">9</span><small style="margin-left:auto">one rule each</small></div>' +
+  waits.map(function (w) { return '<a class="row ldr" href="#puts">' + sym(w) + '<span class="chip amber st">Wait</span><span class="drop">' + w.why + '</span><span class="q">' + w.clears + '</span></a>'; }).join('') +
+  '<div class="mf"><span>5 more</span></div></section></div>' + tabbar('puts');
+
+document.getElementById('pg-leaders').innerHTML =
+  header('Leaders', 'Run Thu 16 Oct after the US close', '<button class="btn" type="button">' + ic('cal', 's') + 'Thu 16</button>') +
+  '<div class="bd"><div class="funnel"><span>screened <b>1,312</b></span><span class="arr">›</span><span>leaders <b>61</b></span><span class="arr">›</span><span>consolidating <b>29</b></span><span class="arr">›</span><span>quality pass <b>24</b></span><span class="arr">›</span><span>shortlist <b>20</b></span></div>' +
+  '<div class="filters"><div class="seg"><button class="on" type="button">All</button><button type="button">US</button><button type="button">HK</button></div><div class="seg"><button class="on" type="button">Setup 7</button><button type="button">Watch 13</button></div></div>' +
+  '<section class="mod" aria-label="Shortlist"><div class="mh"><h2>Shortlist</h2><span class="n">20</span><span class="chip up" style="margin-left:auto">entries allowed</span></div>' +
+  leaders.map(function (s, i) { return ldrRow(s, i === 0); }).join('') +
+  '<div class="mf"><span>13 more</span><span>record: 23 setups in 60 days, 9 reached 3R, 11 stopped</span></div></section></div>' + tabbar('leaders');
+
+document.getElementById('pg-news').innerHTML =
+  header('News', 'Fetched 08:05 HKT', '<button class="btn" type="button">' + ic('scan', 's') + 'Refresh</button>') +
+  '<div class="bd"><section class="mod" aria-label="Morning brief"><div class="mh"><h2>Before the HK open</h2><small style="margin-left:auto">written 08:06, 11 sources</small></div>' +
+  '<div class="brief"><div class="lead">US closed mixed on Thursday: S&amp;P 500 down 0.2% on regional-bank credit worries, Nasdaq flat. HSI futures point 0.8% lower. VIX at 20 is the highest since June, so US premium is richer while the regime stays bull, calm.</div>' +
+  '<div class="tape"><span>SPX 6,612 -0.2%</span><span>NDX 24,410 0.0%</span><span>HSI fut 25,840 -0.8%</span><span>VIX 20.1</span><span>VHSI 24.3</span><span>UST10 4.02%</span><span>USDCNH 7.11</span></div>' +
+  '<ul><li><span>US</span><span>Two regional banks wrote off loans and fell 5 to 10%; the large banks held after JPM and GS beat.</span></li>' +
+  '<li><span>HK·CN</span><span>Prosus confirmed daily Tencent sales continue; a Meituan and JD subsidy truce is reported, not confirmed.</span></li>' +
+  '<li><span>Macro</span><span>US September CPI is delayed to 24 Oct by the shutdown; HK retail sales were up 2% in August.</span></li>' +
+  '<li><span>Dates</span><span>KO Tue, TSLA Wed, HSBC and MSFT 28 Oct, HK expiry Thu 29 Oct.</span></li></ul>' +
+  '<div class="fp">For put selling: richer premium on US names that have already reported; stay clear of anything reporting inside the window.</div></div></section>' +
+  '<div class="filters"><div class="seg"><button class="on" type="button">Shortlist</button><button type="button">Open puts</button><button type="button">All watched</button></div><div class="seg"><button type="button">24h</button><button class="on" type="button">3 days</button><button type="button">Week</button></div></div>' +
+  '<section class="mod" aria-label="Stories"><div class="mh"><h2>Stories on your names</h2><span class="n">8</span><small style="margin-left:auto">hide neutral</small></div>' + stories.map(newsRow).join('') +
+  '<div class="mf"><span>Nothing new on PEP, 0388, 9988, AAPL</span></div></section></div>' + tabbar('news');
+
+document.getElementById('pg-research').innerHTML =
+  header('Research', '18 watched names, 5 reports this week', '<button class="btn pri" type="button">Start research</button>') +
+  '<div class="bd"><section class="mod" aria-label="Running"><div class="mh"><h2>Running</h2><span class="n">1</span></div>' + runs.map(runBlock).join('') + '</section>' +
+  '<section class="mod" aria-label="Presets"><div class="mh"><h2>Start from a preset</h2></div>' +
+  [['Just the numbers', 'Quality screen only', 'free, instant'], ['Would I accept assignment?', 'Checklist and thesis on the recommended put', 'about US$ 1.50, 3 min'], ['Leader check', 'Quality screen, news pulse, thesis tracker', 'about US$ 0.90, 2 min'], ['Full deep dive', 'All seven skills', 'about US$ 8, 15 min']].map(function (p) {
+    return '<a class="row rp" href="#research"><span class="sym"><span style="font-weight:600">' + p[0] + '</span></span><span class="sk">' + p[1] + '</span><span class="v"><small>' + p[2] + '</small></span></a>';
+  }).join('') + '</section>' +
+  '<section class="mod" aria-label="Reports"><div class="mh"><h2>Reports</h2><span class="n">5</span><small style="margin-left:auto">this week</small></div>' + reports.map(rpRow).join('') +
+  '<div class="mf"><span>Quality screen: 12 of 18 watched pass</span><span style="margin-left:auto">US$ 5.60 this week</span></div></section></div>' + tabbar('research');
+
+function daysStrip() {
+  var d = [['Fri', '17', 'a n', true], ['Sat', '18', '', false], ['Sun', '19', '', false], ['Mon', '20', '', false], ['Tue', '21', 'r', false], ['Wed', '22', 'r a', false], ['Thu', '23', '', false],
+    ['Fri', '24', 'n', false], ['Sat', '25', '', false], ['Sun', '26', '', false], ['Mon', '27', '', false], ['Tue', '28', 'r r', false], ['Wed', '29', 'e', false], ['Thu', '30', 'r', false]];
+  return '<div class="days" aria-label="Next fourteen days">' + d.map(function (x) {
+    var dots = x[2] ? x[2].split(' ').map(function (c) { return '<i class="' + c + '"></i>'; }).join('') : '<i style="opacity:0"></i>';
+    return '<span' + (x[3] ? ' class="today"' : '') + '>' + x[0] + '<b>' + x[1] + '</b>' + dots + '</span>';
+  }).join('') + '</div>';
+}
+document.getElementById('pg-remind').innerHTML =
+  header('Reminders', '2 today, 14 in the next 30 days', '<button class="btn" type="button">' + ic('settings', 's') + 'Channels</button>') +
+  '<div class="bd">' + daysStrip() +
+  '<div class="filters"><span class="chip amber">Results</span><span class="chip sky">Expiries</span><span class="chip down">Alerts</span><span class="chip" style="background:var(--pine-soft);color:var(--pine-ink)">Key news</span><span class="chip ghost">Ex-dividend</span></div>' +
+  '<section class="mod" aria-label="Upcoming">' + rmList(reminders) +
+  '<div class="mf"><span>Results dates: Yahoo calendar and HKEX notices. HK dates marked unconfirmed until the board-meeting notice is filed.</span></div></section></div>' + tabbar('home');
+
+/* ---------- laptop Home ---------- */
+var railItems = [['home', 'Home'], ['puts', 'Puts'], ['leaders', 'Leaders'], ['news', 'News'], ['research', 'Research'], ['bell', 'Reminders'], ['watch', 'Watchlist'], ['positions', 'Positions'], ['journal', 'Journal'], ['data', 'Data'], ['settings', 'Settings']];
+document.getElementById('home-desk').innerHTML =
+  '<nav class="rail ui" aria-label="Pages"><div class="wm">OT</div>' + railItems.map(function (r) { return '<a href="#' + r[0] + '"' + (r[0] === 'home' ? ' class="on"' : '') + '>' + ic(r[0]) + '<span>' + r[1] + '</span></a>'; }).join('') + '</nav>' +
+  '<div class="main ui"><header class="dhd"><div><h1>Friday 17 October</h1><div class="sub">HK opens in 50 min. US reopens 21:30.</div></div>' +
+  '<div class="sess">' + sessionBand() + '</div>' +
+  '<div class="acts">' + stateGrid() + '</div></header>' +
+  '<div class="grid"><div class="c7">' + putsPanel(5) + '</div><div class="c5">' + remindPanel(6) + '</div><div class="c7">' + leadersPanel(5) + '</div><div class="c5">' + newsPanel(3) + '</div>' +
+  '<div class="c12"><section class="mod" aria-label="Research"><div class="mh"><h2>Research</h2><span class="n">1 running</span><a class="open" href="#research">Open' + ic('chev', 's') + '</a></div>' + runs.map(runBlock).join('') +
+  '<div class="rp-grid">' + reports.slice(0, 4).map(rpRow).join('') + '</div><div class="mf"><span>5 reports this week</span><span>quality screen: 12 of 18 watched pass</span><span style="margin-left:auto">US$ 5.60 this week</span></div></section></div></div></div>';
+</script>
+</body>
+</html>

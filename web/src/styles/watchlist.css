@@ -1,0 +1,399 @@
+/* ---------- Watchlist board: summary tiles, filter bar, one wide table (desktop) / stacked cards (phone) ---------- */
+.page.wl-board {
+  max-width: 1680px;
+}
+.wl-asof {
+  font-size: 12.5px;
+}
+
+/* summary tiles */
+.wl-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.wl-tile .wl-tilenote {
+  margin-top: 2px;
+  min-height: 16px;
+  font-size: 12px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.wl-tile.ok h2 {
+  color: var(--ok);
+}
+.wl-tile.warn h2 {
+  color: var(--warn);
+}
+
+/* filter bar */
+.wl-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+.wl-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.wl-fchip {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line2);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.wl-fchip:hover {
+  background: var(--panel2);
+}
+.wl-fchip.on {
+  background: var(--accentbg);
+  border-color: var(--accent);
+  color: var(--brand-deep);
+}
+.wl-count {
+  margin-left: 2px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+.wl-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.wl-seg {
+  display: inline-flex;
+  margin: 0;
+  min-width: 0;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel2);
+}
+.wl-seg button {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.wl-seg button.on {
+  background: var(--panel);
+  color: var(--ok);
+  box-shadow: var(--shadow);
+}
+.wl-search,
+.wl-sortsel {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 13px;
+}
+.wl-search {
+  width: 170px;
+  min-width: 0;
+}
+/* the header row sorts on a desktop; a phone has no header row, so it gets a menu */
+.wl-sortsel {
+  display: none;
+}
+
+/* the table */
+.wl-table {
+  min-width: 1260px;
+}
+.wl-table th,
+.wl-table td {
+  padding: 10px;
+  vertical-align: top;
+}
+.wl-table th {
+  vertical-align: middle;
+}
+.wl-th {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+.wl-th:hover {
+  color: var(--ink);
+}
+.wl-arrow {
+  display: inline-block;
+  min-width: 8px;
+  font-size: 9px;
+}
+.wl-tr {
+  cursor: pointer;
+}
+.wl-tr:hover td {
+  background: var(--panel2);
+}
+.wl-sticky {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--panel);
+  box-shadow: 1px 0 0 var(--line);
+}
+.wl-table th.wl-sticky {
+  background: var(--panel2);
+  z-index: 2;
+}
+.wl-open {
+  display: grid;
+  gap: 1px;
+  max-width: 200px;
+  text-align: left;
+}
+.wl-open b {
+  font-size: 14px;
+  color: var(--ink);
+}
+.wl-open small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+}
+.wl-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+.wl-price {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  text-align: right;
+}
+.wl-price .spk {
+  display: block;
+  width: 56px;
+  height: 18px;
+}
+.wl-stack {
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+}
+.wl-stack > b,
+.wl-stack > span {
+  white-space: nowrap;
+}
+.wl-table .sbar {
+  width: 34px;
+}
+.wl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.wl-recommend {
+  min-width: 240px;
+}
+.wl-rec .wl-why {
+  max-width: 330px;
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--ink2);
+}
+.wl-rec .wl-put {
+  margin-top: 3px;
+  font-size: 12px;
+}
+.wl-hl {
+  min-width: 180px;
+}
+.wl-watch {
+  text-align: center;
+}
+
+/* rows that are not in the table: being scored, not watching */
+.wl-plain {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wl-plain li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.wl-plain li:last-child {
+  border-bottom: 0;
+}
+.wl-plain li.dim b {
+  opacity: 0.7;
+}
+
+.wl-help summary {
+  padding: 12px 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.wl-helplist {
+  margin: 0;
+  padding: 0 14px 14px 32px;
+  gap: 5px;
+  font-size: 13px;
+}
+
+/* a laptop: drop the sparkline so the recommendation and the KPIs stay in view */
+@media (min-width: 900px) and (max-width: 1440px) {
+  .wl-price .spk {
+    display: none;
+  }
+}
+
+@media (max-width: 1100px) {
+  .wl-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* phone: the header row is gone (stacked cards), so the stock, the recommendation and the highlight lead each card */
+@media (max-width: 899px) {
+  .wl-asof {
+    flex: 1 0 100%;
+  }
+  .wl-board > .row > .sp {
+    display: none;
+  }
+  /* four tiles as one swipeable strip instead of a 2 x 2 block: the stocks come up the screen sooner */
+  .wl-tiles {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(150px, 46%);
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+  .wl-tiles::-webkit-scrollbar {
+    display: none;
+  }
+  .wl-tile {
+    scroll-snap-align: start;
+  }
+  .wl-table {
+    min-width: 0;
+  }
+  /* a card: stock and its switch on top, then verdict and highlights, then the KPIs three across */
+  .tbl.cards.wl-table tr {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .tbl.cards.wl-table td.wl-stock {
+    grid-column: 1 / span 2;
+    order: -5;
+  }
+  .tbl.cards.wl-table td.wl-watch {
+    grid-column: 3;
+    order: -5;
+    justify-self: end;
+    align-self: start;
+  }
+  .tbl.cards.wl-table td.wl-watch[data-label]::before {
+    display: none;
+  }
+  .wl-price .spk {
+    display: none;
+  }
+  .wl-sticky {
+    position: static;
+    box-shadow: none;
+  }
+  .wl-tr:hover td {
+    background: none;
+  }
+  .wl-table td.wl-recommend,
+  .wl-table td.wl-hl {
+    min-width: 0;
+  }
+  .wl-open {
+    max-width: none;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: baseline;
+    gap: 8px;
+  }
+  .wl-open b {
+    font-size: 17px;
+  }
+  .wl-price {
+    justify-content: flex-start;
+    text-align: left;
+  }
+  .wl-rec .wl-why {
+    max-width: none;
+    font-size: 14px;
+  }
+  .wl-toolbar {
+    gap: 8px;
+  }
+  .wl-chips-row {
+    flex-wrap: nowrap;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+  .wl-chips-row::-webkit-scrollbar {
+    display: none;
+  }
+  .wl-fchip {
+    min-height: 40px;
+  }
+  .wl-tools {
+    width: 100%;
+  }
+  .wl-seg button {
+    min-height: 38px;
+  }
+  .wl-search {
+    flex: 1 1 auto;
+    min-height: 44px;
+    font-size: 16px;
+  }
+  .wl-sortsel {
+    display: block;
+    flex: 1 1 100%;
+    min-height: 44px;
+    font-size: 16px;
+  }
+  .wl-tools {
+    flex-wrap: wrap;
+  }
+}

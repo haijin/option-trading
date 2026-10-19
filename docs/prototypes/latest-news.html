@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Latest News</title>
+<meta name="description" content="Option_Trading News page prototype: a market brief for put sellers plus the stories that touch the shortlist, open positions and the rest of the watchlist, with a day navigator, calendar and search for past news. Static sample data." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* Layout: phone-first single column (day navigator, market brief, then per-stock news groups); desktop puts the brief in a sticky left column. Tokens copied from docs/prototypes/dashboard-v2.html so this matches the live app. */
+:root {
+  color-scheme: light;
+  --bg:#f7f8fa; --panel:#fff; --panel2:#f0f2f5; --ink:#111b21; --ink2:#3b4a54; --muted:#54656f; --faint:#667781; --dim:#8696a0;
+  --line:#e9edef; --line2:#d1d7db; --brand:#25d366; --brand-dark:#128c7e; --brand-deep:#075e54; --brand-soft:#dcf8c6;
+  --accent:#128c7e; --accentbg:#d4f7df;
+  --ok:#075e54; --okbg:rgba(37,211,102,.16); --warn:#856404; --warnbg:#fff3c4; --fail:#c5221f; --failbg:#fde8e6;
+  --blue:#0086cb; --bluebg:rgba(52,183,241,.16); --chip:#f0f2f5;
+  --shadow:0 1px 1px rgba(0,0,0,.04),0 1px 3px rgba(11,20,26,.06);
+  --r-sm:6px; --r-md:8px; --r-lg:12px; --tabbar:62px;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --sans:"Inter",-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  color-scheme:dark; --bg:#0b141a; --panel:#111b21; --panel2:#202c33; --ink:#e9edef; --ink2:#d1d7db; --muted:#aebac1; --faint:#8696a0; --dim:#667781;
+  --line:#222d34; --line2:#2a3942; --brand:#00a884; --brand-dark:#00a884; --brand-deep:#005c4b; --brand-soft:#005c4b; --accent:#00a884; --accentbg:#103a31;
+  --ok:#4cd18c; --okbg:#0f2f27; --warn:#f5c542; --warnbg:#3a2e0a; --fail:#f8766d; --failbg:#3b1a1e;
+  --blue:#53bdeb; --bluebg:#12303d; --chip:#202c33; --shadow:none; } }
+:root[data-theme="dark"] {
+  color-scheme:dark; --bg:#0b141a; --panel:#111b21; --panel2:#202c33; --ink:#e9edef; --ink2:#d1d7db; --muted:#aebac1; --faint:#8696a0; --dim:#667781;
+  --line:#222d34; --line2:#2a3942; --brand:#00a884; --brand-dark:#00a884; --brand-deep:#005c4b; --brand-soft:#005c4b; --accent:#00a884; --accentbg:#103a31;
+  --ok:#4cd18c; --okbg:#0f2f27; --warn:#f5c542; --warnbg:#3a2e0a; --fail:#f8766d; --failbg:#3b1a1e;
+  --blue:#53bdeb; --bluebg:#12303d; --chip:#202c33; --shadow:none; }
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--sans);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+a{color:inherit;text-decoration:none}
+button{font:inherit;border:0;background:none;color:inherit;cursor:pointer;padding:0}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.num{font-variant-numeric:tabular-nums}
+svg{display:block}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+
+/* frame */
+.app{min-height:100dvh;display:flex;flex-direction:column}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--panel);border-bottom:1px solid var(--line);padding:12px 16px 10px}
+.top .row{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.top h1{margin:0;font-size:22px;font-weight:700;color:var(--brand-deep);letter-spacing:-.02em}
+.top .asof{font-size:12.5px;color:var(--faint);white-space:nowrap}
+.top .sub{margin-top:5px;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.top .sub .tool{margin-left:auto;font-size:13px;color:var(--accent);font-weight:600;display:inline-flex;gap:5px;align-items:center}
+.top .sub .tool svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.body{flex:1;padding:14px 16px calc(var(--tabbar) + 28px);display:grid;gap:18px;align-content:start}
+.tabbar{position:fixed;left:0;right:0;bottom:0;height:calc(var(--tabbar) + env(safe-area-inset-bottom,0px));background:var(--panel);border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:flex-start;padding:9px 0 env(safe-area-inset-bottom,0px);z-index:5}
+.tabbar a{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:500;color:var(--faint);min-width:48px;position:relative}
+.tabbar a.active{color:var(--brand-dark);font-weight:600}
+.tabbar svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabbar .badge{position:absolute;top:-4px;right:4px;min-width:17px;height:17px;padding:0 5px;border-radius:9px;background:var(--fail);color:#fff;font-size:10.5px;font-weight:700;display:grid;place-items:center}
+
+/* generic */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:var(--r-sm);font-size:11px;font-weight:600;background:var(--chip);color:var(--muted);white-space:nowrap;line-height:1.5}
+.up{color:var(--ok)} .dn{color:var(--fail)} .flat{color:var(--faint)}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;border-radius:var(--r-md);font-weight:600;font-size:14px;background:var(--panel2);color:var(--ink)}
+.btn.primary{background:var(--brand-dark);color:#fff}
+.btn.sm{padding:7px 12px;font-size:13px}
+.sec > .sh{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:2px 0 10px}
+.sec > .sh h2{margin:0;font-size:15px;font-weight:700;letter-spacing:-.01em;flex:none}
+.sec > .sh .cnt{font-size:12.5px;color:var(--faint);font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sec > .sh .chev{width:18px;height:18px;stroke:var(--dim);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s;flex:none}
+.sec.closed > .sh .chev{transform:rotate(-90deg)}
+.sec.closed > .sb{display:none}
+.foot{font-size:11.5px;color:var(--faint);text-align:center;padding:4px 8px 0;line-height:1.5}
+.hidden{display:none!important}
+
+/* ---------- day navigator ---------- */
+.daynav{display:grid;gap:8px;position:relative}
+.daynav .bar{display:flex;align-items:center;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:6px 6px;box-shadow:var(--shadow)}
+.daynav .arrow{width:36px;height:36px;border-radius:var(--r-md);display:grid;place-items:center;color:var(--accent);flex:none}
+.daynav .arrow:disabled{color:var(--line2);cursor:default}
+.daynav .arrow svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.daynav .day{flex:1;min-width:0;text-align:center;font-weight:700;font-size:15px;letter-spacing:-.01em;display:flex;flex-direction:column;align-items:center;line-height:1.2}
+.daynav .day small{font-weight:500;font-size:11.5px;color:var(--faint)}
+.daynav .ico{width:36px;height:36px;border-radius:var(--r-md);display:grid;place-items:center;color:var(--muted);flex:none}
+.daynav .ico.on{background:var(--accentbg);color:var(--brand-deep)}
+.daynav .ico svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.daynav .today{position:absolute;left:50%;transform:translateX(-50%);top:-10px;z-index:1;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--brand-dark);color:#fff;white-space:nowrap;box-shadow:var(--shadow)}
+.searchrow{display:flex;gap:8px;align-items:center}
+.searchrow input{flex:1;min-width:0;padding:9px 12px;border:1px solid var(--line2);border-radius:var(--r-md);background:var(--panel);color:var(--ink);font:inherit;font-size:14px}
+.searchrow button{color:var(--accent);font-weight:600;font-size:13px;white-space:nowrap}
+
+/* calendar */
+.cal{display:none;padding:10px 12px 12px;gap:8px}
+.cal.on{display:grid}
+.cal .mh{display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:14px}
+.cal .mh button{width:30px;height:30px;border-radius:var(--r-sm);display:grid;place-items:center;color:var(--accent)}
+.cal .mh button svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.cal .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px 2px;text-align:center}
+.cal .dow{font-size:10.5px;font-weight:700;letter-spacing:.05em;color:var(--dim);padding-bottom:2px}
+.cal .d{height:38px;border-radius:var(--r-md);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:13.5px;font-weight:500;color:var(--ink)}
+.cal .d.off{color:var(--line2);cursor:default}
+.cal .d.sel{background:var(--brand-dark);color:#fff;font-weight:700}
+.cal .d.today:not(.sel){box-shadow:inset 0 0 0 1.5px var(--brand-dark)}
+.cal .d .dots{display:flex;gap:2px;height:5px}
+.cal .d .dots i{width:5px;height:5px;border-radius:50%;display:block}
+.cal .d .dots i.supports{background:var(--ok)} .cal .d .dots i.caution{background:var(--warn)} .cal .d .dots i.blocks{background:var(--fail)} .cal .d .dots i.neutral{background:var(--dim)}
+.cal .d.sel .dots i{background:rgba(255,255,255,.85)}
+.cal .legend{display:flex;gap:10px;font-size:11px;color:var(--faint);justify-content:center;flex-wrap:wrap}
+.cal .legend i{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:1px}
+
+/* ---------- market brief ---------- */
+.brief{padding:14px 14px 12px;display:grid;gap:10px}
+.brief .sess{display:flex;gap:4px;background:var(--panel2);padding:3px;border-radius:999px;align-self:start;width:max-content;max-width:100%}
+.brief .sess button{padding:4px 11px;border-radius:999px;font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}
+.brief .sess button.on{background:var(--panel);color:var(--ink);box-shadow:var(--shadow)}
+.brief .lead{margin:0;font-size:16px;font-weight:700;line-height:1.35;letter-spacing:-.01em;text-wrap:balance}
+.tape{display:flex;gap:6px;overflow-x:auto;margin:0 -14px;padding:0 14px 2px;scrollbar-width:none}
+.tape::-webkit-scrollbar{display:none}
+.tape span{flex:none;display:inline-flex;gap:5px;align-items:baseline;padding:4px 9px;border-radius:var(--r-sm);background:var(--panel2);font-size:12px;color:var(--faint);font-weight:500}
+.tape b{font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--ink)}
+.pts{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.pts li{display:grid;grid-template-columns:52px 1fr;gap:10px;font-size:13.5px;color:var(--ink2);line-height:1.4}
+.pts .tag{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);padding-top:3px}
+.pts li b{color:var(--ink);font-weight:600}
+.forput{display:flex;gap:9px;padding:10px 11px;border-radius:var(--r-md);background:var(--accentbg);color:var(--brand-deep);font-size:13.5px;line-height:1.4;font-weight:500}
+.forput svg{flex:none;width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;margin-top:2px}
+.brief .srcs{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--faint);padding-top:6px;border-top:1px solid var(--line)}
+.brief .srcs button{color:var(--accent);font-weight:600;font-size:13px;margin-left:auto;white-space:nowrap}
+.brief .srclist{display:none;gap:6px;font-size:12.5px;color:var(--ink2)}
+.brief.x .srclist{display:grid}
+.brief .srclist a{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.brief .srclist a span:first-child{flex:none;color:var(--faint);font-family:var(--mono);font-size:11.5px}
+.brief .srclist a u{text-decoration:none;color:var(--accent);font-weight:600}
+.brief .nob{font-size:13.5px;color:var(--faint);line-height:1.45}
+
+/* ---------- filters ---------- */
+.seg{display:flex;gap:4px;background:var(--panel2);padding:3px;border-radius:999px}
+.seg button{flex:1;padding:6px 6px;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap}
+.seg button.on{background:var(--panel);color:var(--ink);box-shadow:var(--shadow)}
+.seg button small{color:var(--dim);font-weight:500;margin-left:3px}
+.filters{display:grid;gap:10px}
+.winrow{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--faint);flex-wrap:wrap}
+.winrow .w{display:inline-flex;gap:4px}
+.winrow .w button{padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;color:var(--muted);border:1px solid var(--line2)}
+.winrow .w button.on{background:var(--accentbg);color:var(--brand-deep);border-color:transparent}
+.winrow label{margin-left:auto;display:inline-flex;gap:6px;align-items:center;font-weight:500;cursor:pointer}
+.winrow input{accent-color:var(--brand-dark);width:15px;height:15px;margin:0}
+.resline{font-size:12.5px;color:var(--faint)}
+.resline b{color:var(--ink2);font-weight:600}
+
+/* ---------- per-stock groups ---------- */
+.groups{display:grid;gap:12px}
+.grp{overflow:hidden;border-left:3px solid var(--line2)}
+.grp.sell{border-left-color:var(--brand)} .grp.open{border-left-color:var(--blue)} .grp.wait{border-left-color:var(--warn)} .grp.avoid{border-left-color:var(--fail)}
+.grp .gh{display:grid;grid-template-columns:1fr auto;gap:3px 10px;padding:11px 13px 9px 11px;border-bottom:1px solid var(--line)}
+.grp .sym{font-weight:700;font-size:16px;letter-spacing:-.01em;display:flex;gap:7px;align-items:baseline;flex-wrap:wrap}
+.grp .sym small{font-weight:400;font-size:12px;color:var(--faint)}
+.grp .px{text-align:right;font-weight:600;font-size:14.5px;white-space:nowrap}
+.grp .px small{font-size:12px;font-weight:600;margin-left:5px}
+.grp .stand{grid-column:1/-1;font-size:13px;font-weight:600;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.grp.sell .stand{color:var(--ok)} .grp.open .stand{color:var(--blue)} .grp.wait .stand{color:var(--warn)} .grp.avoid .stand{color:var(--fail)}
+.grp .stand .m{font-family:var(--mono);font-weight:500;font-size:12.5px}
+.grp .stand .then{font-weight:500;color:var(--faint);font-size:12px}
+.item{display:grid;gap:5px;padding:11px 13px 10px 11px;border-bottom:1px solid var(--line);text-align:left;width:100%}
+.item:last-child{border-bottom:0}
+.item .ih{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--faint)}
+.item .ih .when{margin-left:auto;white-space:nowrap}
+.imp{display:inline-flex;align-items:center;gap:5px;padding:2px 8px 2px 6px;border-radius:var(--r-sm);font-size:11px;font-weight:700;white-space:nowrap}
+.imp i{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+.imp.supports{background:var(--okbg);color:var(--ok)} .imp.caution{background:var(--warnbg);color:var(--warn)} .imp.blocks{background:var(--failbg);color:var(--fail)} .imp.neutral{background:var(--chip);color:var(--muted)}
+.item h3{margin:0;font-size:14.5px;font-weight:600;line-height:1.35}
+.item h3 mark{background:var(--warnbg);color:inherit;border-radius:3px;padding:0 1px}
+.item .so{font-size:13.5px;color:var(--ink2);line-height:1.4}
+.item .so b{font-weight:700}
+.item.supports .so b{color:var(--ok)} .item.caution .so b{color:var(--warn)} .item.blocks .so b{color:var(--fail)} .item.neutral .so b{color:var(--muted)}
+.item .more{display:none;gap:7px;margin-top:4px;padding-top:9px;border-top:1px solid var(--line);font-size:13px;color:var(--ink2)}
+.item.x .more{display:grid}
+.item .more .kv{display:flex;gap:8px;align-items:flex-start}
+.item .more .k{flex:none;width:18px;height:18px;border-radius:4px;font-size:10px;font-weight:800;display:grid;place-items:center;margin-top:1px}
+.k.f{background:var(--bluebg);color:var(--blue)} .k.t{background:var(--chip);color:var(--muted)} .k.e{background:var(--warnbg);color:var(--warn)} .k.p{background:var(--okbg);color:var(--ok)}
+.item .more .cite{display:flex;gap:8px;align-items:baseline;font-size:12.5px;color:var(--faint);flex-wrap:wrap}
+.item .more .cite u{text-decoration:none;color:var(--accent);font-weight:600}
+.item .more .acts{display:flex;gap:8px;margin-top:3px}
+.item .more .acts .btn{flex:1;padding:8px 6px;font-size:12.5px;white-space:nowrap}
+.quiet{padding:11px 13px;font-size:13px;color:var(--faint);line-height:1.5}
+.quiet b{color:var(--ink2);font-weight:600}
+.empty{padding:26px 16px;text-align:center;color:var(--faint);font-size:14px}
+
+/* desktop */
+.desknav{display:none}
+@media (min-width: 900px) {
+  .tabbar{display:none}
+  .top{padding:12px 24px}
+  .top .inner{max-width:1100px;margin:0 auto}
+  .desknav{display:flex;gap:4px;margin-top:8px}
+  .desknav a{padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted)}
+  .desknav a.active{background:var(--accentbg);color:var(--brand-deep)}
+  .body{padding:22px 24px 40px;max-width:1100px;margin:0 auto;width:100%;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:0 24px;align-items:start}
+  .col-l{position:sticky;top:calc(env(safe-area-inset-top,0px) + 96px);display:grid;gap:18px}
+  .col-r{display:grid;gap:14px}
+  .foot{grid-column:1/-1}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top"><div class="inner">
+    <div class="row"><h1>News</h1><span class="asof" id="asof">Fetched 07:40 HKT</span></div>
+    <div class="sub"><span>Market brief, then the stories that touch your names</span><button class="tool" type="button" aria-label="Refresh news"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg>Refresh</button></div>
+    <nav class="desknav"><a href="#today">Today</a><a href="#research">Research</a><a class="active" href="#news">News</a><a href="#watchlist">Watchlist</a><a href="#positions">Positions</a><a href="#data">Data</a><a href="#settings">Settings</a></nav>
+  </div></header>
+
+  <main class="body">
+    <div class="col-l">
+      <div class="daynav" id="daynav">
+        <button class="today hidden" type="button" id="backToday">Back to today</button>
+        <div class="bar">
+          <button class="arrow" type="button" id="prevDay" aria-label="Previous day"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+          <button class="day" type="button" id="dayLabel" aria-label="Pick a day"><span id="dayMain">Today</span><small id="daySub">Tue 13 Oct 2026</small></button>
+          <button class="arrow" type="button" id="nextDay" aria-label="Next day" disabled><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+          <button class="ico" type="button" id="calBtn" aria-label="Calendar" aria-expanded="false"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></button>
+          <button class="ico" type="button" id="searchBtn" aria-label="Search headlines" aria-expanded="false"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
+        </div>
+        <div class="card cal" id="cal"></div>
+        <div class="searchrow hidden" id="searchrow">
+          <input type="search" id="q" placeholder="Search headlines, any day (e.g. buyback, 1211, earnings)" aria-label="Search headlines" />
+          <button type="button" id="clearq">Clear</button>
+        </div>
+      </div>
+
+      <section class="sec" id="sec-brief">
+        <button class="sh" type="button" data-toggle="sec-brief" aria-expanded="true">
+          <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          <h2>Market brief</h2><span class="cnt" id="briefcnt"></span>
+        </button>
+        <div class="sb"><div class="card brief" id="brief"></div></div>
+      </section>
+    </div>
+
+    <div class="col-r">
+      <div class="filters">
+        <div class="seg" role="tablist" aria-label="Which stocks">
+          <button class="on" role="tab" data-scope="shortlist">Shortlist<small>6</small></button>
+          <button role="tab" data-scope="positions">Positions<small>3</small></button>
+          <button role="tab" data-scope="all">All watched<small>18</small></button>
+        </div>
+        <div class="winrow" id="winrow">
+          <span id="winlabel">Last</span>
+          <span class="w" role="group" aria-label="Time window"><button type="button" data-win="1">24h</button><button type="button" class="on" data-win="3">3 days</button><button type="button" data-win="7">Week</button><button type="button" data-win="30">Month</button></span>
+          <label><input type="checkbox" id="hideneutral" /> Hide neutral</label>
+        </div>
+        <div class="resline" id="resline"></div>
+      </div>
+
+      <div class="groups" id="groups"></div>
+      <div class="empty hidden" id="empty">Nothing in this window for these names.</div>
+    </div>
+
+    <p class="foot">Headlines come from Yahoo Finance, HKEXnews and company IR pages; the one-line impact is written by the model against your rules at the time and always links to its source. Past days show the standing the name had on that day. Decision support only, not investment advice. Sample data for the prototype.</p>
+  </main>
+
+  <nav class="tabbar" aria-label="Main">
+    <a href="#today"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Today</span><span class="badge">4</span></a>
+    <a href="#research"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Research</span></a>
+    <a class="active" href="#news"><svg viewBox="0 0 24 24"><path d="M4 4h13a3 3 0 0 1 3 3v12a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2zM8 8h5M8 12h8M8 16h8"/></svg><span>News</span><span class="badge">2</span></a>
+    <a href="#watchlist"><svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg><span>Watch</span></a>
+    <a href="#positions"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M7 15l4-5 3 3 5-7"/></svg><span>Positions</span></a>
+    <a href="#data"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span>Data</span></a>
+    <a href="#settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span>Settings</span></a>
+  </nav>
+</div>
+
+<script>
+// ---------- sample data (illustrative; shapes are what the API would return) ----------
+// Every item has a date (d) and time (t). Past days show the standing the name had on that day (item.then), since the
+// impact line was written against that standing at the time. scope: shortlist | positions | watched. impact: supports |
+// caution | blocks | neutral, with the rule touched (F fundamentals, T timing, E events, P open position).
+const TODAY = '2026-10-13';
+const NAMES = {
+  'NKE':     { name:'NIKE',           scope:'shortlist', cls:'sell',  px:72.40,  chg:+1.8, stand:'Sell', m:'14 Nov · 65 put · 19.4%/yr' },
+  'META':    { name:'Meta Platforms', scope:'shortlist', cls:'sell',  px:718.00, chg:-1.1, stand:'Sell, half size', m:'21 Nov · 640 put · 14.8%/yr' },
+  '0700.HK': { name:'Tencent',        scope:'shortlist', cls:'sell',  px:612.50, chg:+1.6, stand:'Sell', m:'29 Oct · 560 put · 16.2%/yr' },
+  '9988.HK': { name:'Alibaba',        scope:'shortlist', cls:'wait',  px:171.90, chg:+4.9, stand:'Wait (was Sell)', m:'pullback toward 150' },
+  'PDD':     { name:'PDD Holdings',   scope:'shortlist', cls:'sell',  px:121.30, chg:-0.6, stand:'Sell', m:'14 Nov · 105 put · 17.1%/yr' },
+  'BX':      { name:'Blackstone',     scope:'shortlist', cls:'sell',  px:158.20, chg:+0.4, stand:'Sell', m:'14 Nov · 145 put · 13.2%/yr' },
+  '1211.HK': { name:'BYD',            scope:'positions', cls:'open',  px:97.10,  chg:-4.2, stand:'Open put at risk', m:'29 Oct · 95 put · 2.2% OTM · 12 days' },
+  'JD':      { name:'JD.com',         scope:'positions', cls:'open',  px:33.10,  chg:+0.7, stand:'Open put', m:'17 Oct · 31 put · 6.3% OTM · 4 days' },
+  'MSFT':    { name:'Microsoft',      scope:'positions', cls:'open',  px:512.60, chg:-0.4, stand:'Close or roll Monday', m:'31 Oct · 480 put · 6.4% OTM · 21 days' },
+  'TSLA':    { name:'Tesla',          scope:'watched',   cls:'wait',  px:429.80, chg:-2.3, stand:'Wait until after earnings', m:'22 Oct' },
+  'COIN':    { name:'Coinbase',       scope:'watched',   cls:'avoid', px:338.10, chg:-7.1, stand:'Avoid', m:'solvency screen fails' },
+  '3690.HK': { name:'Meituan',        scope:'watched',   cls:'wait',  px:118.40, chg:+2.3, stand:'Wait for a close above 122', m:'' },
+  'NVDA':    { name:'NVIDIA',         scope:'watched',   cls:'wait',  px:183.20, chg:+0.9, stand:'Wait: best put pays 7.9%', m:'' },
+  'AAPL':    { name:'Apple',          scope:'watched',   cls:'wait',  px:245.30, chg:+0.2, stand:'Wait: premium too thin', m:'' },
+  'BIDU':    { name:'Baidu',          scope:'watched',   cls:'wait',  px:128.40, chg:+2.1, stand:'Wait for a close above 132', m:'' },
+  'SE':      { name:'Sea',            scope:'watched',   cls:'wait',  px:168.70, chg:-1.4, stand:'Wait for the trend to turn', m:'' },
+  'LULU':    { name:'lululemon',      scope:'watched',   cls:'wait',  px:171.50, chg:-0.8, stand:'Wait: no support below', m:'' },
+  'SNOW':    { name:'Snowflake',      scope:'watched',   cls:'wait',  px:231.20, chg:+1.1, stand:'Wait: no strike pays 10%', m:'' },
+  'PLTR':    { name:'Palantir',       scope:'watched',   cls:'avoid', px:181.40, chg:+3.2, stand:'Avoid', m:'3.1x intrinsic value' },
+  '2318.HK': { name:'Ping An',        scope:'watched',   cls:'wait',  px:52.30,  chg:+0.6, stand:'Wait: premium too thin', m:'' },
+};
+const ITEMS = [
+  { sym:'NKE', d:'2026-10-13', t:'05:10', imp:'supports', src:'Company IR', h:'Nike reaffirms holiday-quarter guidance at its investor update; new North America head named.', so:'<b>Supports</b> the 14 Nov 65 put: guidance intact and no earnings inside the window (next ~18 Dec).', so2:[['e','Next earnings ~18 Dec, outside every 30 to 45 day expiry'],['t','Still above the 50-day at 68; nothing changes the timing score (72)']], cite:['nike.com/investors','Investor update, 12 Oct'] },
+  { sym:'NKE', d:'2026-10-01', t:'20:05', imp:'supports', src:'Earnings', then:'Wait, gate WARN', h:'Nike Q1: revenue +1%, gross margin 42.2%, inventories down 2%.', so:'<b>Supports</b>: gate back to PASS on the FCF margin; price gapped above the 50-day. Became a Sell idea on 6 Oct.', so2:[['f','Quality gate WARN to PASS: FCF margin back above 8%, net cash'],['t','Gapped above the 50-day and held it']], cite:['nike.com/investors','Q1 FY27 results'] },
+  { sym:'META', d:'2026-10-13', t:'03:30', imp:'caution', src:'Company IR', h:'Meta sets Q3 results for Wed 29 Oct after the close.', so:'<b>Caution</b>: the date is now confirmed inside the 21 Nov window. The scanner already halves size; the 7 Nov expiry would avoid it but pays 9.1%.', so2:[['e','Confirmed event replaces the Yahoo estimate (was 28 Oct)'],['p','Size rule: earnings in window = half size, unchanged']], cite:['investor.atmeta.com','Results date notice'] },
+  { sym:'META', d:'2026-10-11', t:'18:40', imp:'neutral', src:'Yahoo Finance', h:'EU opens a second DMA review of Meta\'s ad-free subscription tier.', so:'<b>Neutral</b> for a 10% out-of-the-money put: a fine would be under 1% of revenue; no rule touched.', so2:[['f','Quality gate PASS; no change to FCF margin or net cash']], cite:['finance.yahoo.com','Headline, 11 Oct'] },
+  { sym:'0700.HK', d:'2026-10-13', t:'07:02', imp:'supports', src:'HKEXnews', h:'Tencent repurchased 1.5m shares for HK$0.92bn on 12 Oct; buyback total this year passes HK$70bn.', so:'<b>Supports</b> the 29 Oct 560 put: the daily buyback keeps a bid under the 50-day at 585.', so2:[['t','Price 4.7% above the 50-day, timing score 68'],['f','Net cash, 4-star value, gate PASS']], cite:['hkexnews.hk','Next day disclosure return, 13 Oct'] },
+  { sym:'0700.HK', d:'2026-10-10', t:'09:15', imp:'caution', src:'Model (events scout)', h:'Q3 results expected Thu 12 Nov, per last year\'s pattern and the IR calendar.', so:'<b>Caution</b>: 12 Nov is outside the 29 Oct expiry but inside the Nov one. Added as an <b>unconfirmed</b> event; confirm it on the Data page or wait for the HKEXnews notice.', so2:[['e','corporate_events row, source ai, confirmed false, WARN only until confirmed']], cite:['tencent.com/ir','Financial calendar'] },
+  { sym:'0700.HK', d:'2026-10-06', t:'07:05', imp:'neutral', src:'HKEXnews', h:'Tencent: monthly return on share capital movements for September.', so:'<b>Neutral</b>: routine filing; share count down 0.4% in the month.', so2:[['f','No rule touched']], cite:['hkexnews.hk','Monthly return, 6 Oct'] },
+  { sym:'9988.HK', d:'2026-10-13', t:'06:20', imp:'caution', src:'Yahoo Finance', h:'Alibaba lifts cloud capex plan after the Qwen3 launch; shares +5% Monday, best day since June.', so:'<b>Caution</b>: now 14% above the 50-day, so timing wants a pullback toward 150 before selling the 29 Oct put. Same story moved it from Sell to Wait on Today.', so2:[['t','Timing score 41, extended; the 150 strike is 13% below spot'],['f','Gate PASS, 4-star value, assignment at 150 would be welcome']], cite:['finance.yahoo.com','Headline, 12 Oct'] },
+  { sym:'9988.HK', d:'2026-10-09', t:'10:30', imp:'supports', src:'Company IR', then:'Sell · 29 Oct · 150 put', h:'Alibaba launches Qwen3-Max and opens its model to Hong Kong enterprise customers.', so:'<b>Supports</b> the 29 Oct 150 put: product cadence intact, price 6% above the 50-day.', so2:[['t','Timing score 64 that day'],['f','Gate PASS']], cite:['alibabagroup.com','Press release, 9 Oct'] },
+  { sym:'PDD', d:'2026-10-06', t:'21:10', imp:'neutral', src:'Yahoo Finance', h:'PDD expands Temu local-seller programme to six more European markets.', so:'<b>Neutral</b>: no rule touched; the 105 strike sits under the 116 to 124 range either way.', so2:[['t','Range-bound, timing score 58']], cite:['finance.yahoo.com','Headline, 6 Oct'] },
+  { sym:'BX', d:'2026-10-12', t:'22:00', imp:'neutral', src:'Company IR', h:'Blackstone to report Q3 on Thu 16 Oct before the open.', so:'<b>Neutral</b>: results fall before the 14 Nov window opens, so the scanner waits for Thursday\'s print and re-prices the put on Friday.', so2:[['e','Earnings 16 Oct, 3 days away; idea is tagged "after earnings"']], cite:['blackstone.com/ir','Results date notice'] },
+  { sym:'1211.HK', d:'2026-10-13', t:'06:48', imp:'blocks', src:'HKEXnews', h:'BYD September NEV sales 396k, down 8% y/y, the first annual decline in five years; overseas sales +120%.', so:'<b>Blocks</b>: spot fell to 2.2% above your 95 strike. Assignment-risk alert sent 07:12; the model reads it as cyclical, <b>thesis break: no</b>. Stop rule (2x credit) is HK$0.40 away.', so2:[['p','Open 29 Oct 95 put, credit 2.10, mark 3.80 (1.8x)'],['f','Quality gate PASS, 4-star value at 95; you said you would own it here'],['t','Closed below the 100-day; next support 92']], cite:['hkexnews.hk','Voluntary announcement, 13 Oct'], attributed:true },
+  { sym:'1211.HK', d:'2026-10-11', t:'16:20', imp:'caution', src:'Reuters (headline)', h:'EU to review definitive tariffs on China-built EVs after the price-undertaking talks stall.', so:'<b>Caution</b>: no rule touched today, but it is the second negative headline in three days on the same name.', so2:[['e','No dated event; watch for a Commission decision date']], cite:['reuters.com','Headline, 11 Oct'] },
+  { sym:'1211.HK', d:'2026-10-02', t:'08:30', imp:'caution', src:'Yahoo Finance', then:'Open put · 29 Oct · 95 put · 7.8% OTM', h:'BYD cuts prices on twelve models in China by up to 12% ahead of Golden Week.', so:'<b>Caution</b>: margin pressure, but 7.8% out of the money with 27 days left; hold.', so2:[['p','Mark 1.9, 0.9x credit'],['f','Operating margin trend WARN']], cite:['finance.yahoo.com','Headline, 2 Oct'] },
+  { sym:'JD', d:'2026-10-12', t:'14:05', imp:'caution', src:'Yahoo Finance', h:'Broker cuts JD.com margin forecast on food-delivery subsidies; keeps Buy.', so:'<b>Caution</b>: 4 days to expiry and 6.3% out of the money, so hold. A close under 31.5 would trigger the close rule.', so2:[['p','Hold to expiry stands; alert threshold 31.5'],['f','Operating margin trend WARN if the Q3 print confirms it']], cite:['finance.yahoo.com','Headline, 12 Oct'] },
+  { sym:'JD', d:'2026-09-30', t:'09:40', imp:'neutral', src:'Company IR', then:'Open put · 17 Oct · 31 put · 8.1% OTM', h:'JD.com to report Q3 results in mid-November; date to be announced.', so:'<b>Neutral</b>: outside the 17 Oct expiry.', so2:[['e','No dated event yet']], cite:['ir.jd.com','IR notice, 30 Sep'] },
+  { sym:'MSFT', d:'2026-10-11', t:'20:10', imp:'supports', src:'Company IR', h:'Microsoft adds Azure capacity in Malaysia and Japan; reiterates FY capex guidance.', so:'<b>Supports</b> holding the 480 put into Monday\'s 21-day close-or-roll; 71% of the credit is already captured.', so2:[['p','21-day rule fires Monday regardless of news'],['e','Earnings 29 Oct, after this expiry']], cite:['microsoft.com/investor','Press release, 11 Oct'] },
+  { sym:'MSFT', d:'2026-10-08', t:'22:30', imp:'neutral', src:'Yahoo Finance', then:'Open put · 31 Oct · 480 put · 5.9% OTM', h:'Microsoft and OpenAI finalise the restructured partnership terms.', so:'<b>Neutral</b>: no rule touched; the 480 strike is unchanged in risk.', so2:[['f','Gate PASS']], cite:['finance.yahoo.com','Headline, 8 Oct'] },
+  { sym:'TSLA', d:'2026-10-13', t:'02:15', imp:'blocks', src:'Company IR', h:'Tesla confirms Q3 earnings call for Wed 22 Oct.', so:'<b>Blocks</b> new puts until 23 Oct: earnings sit inside every 30 to 45 day expiry.', so2:[['e','Earnings inside the window'],['f','Price 3.8x intrinsic value (1 star)']], cite:['ir.tesla.com','Results date notice'] },
+  { sym:'TSLA', d:'2026-10-02', t:'21:00', imp:'blocks', src:'Event', then:'Wait', h:'Q3 deliveries beat; earnings call expected 22 Oct.', so:'<b>Blocks</b> new puts until after earnings: the date sits inside every 30 to 45 day expiry.', so2:[['e','Earnings inside the window'],['f','Price 3.8x intrinsic value (1 star)']], cite:['ir.tesla.com','Deliveries release, 2 Oct'] },
+  { sym:'COIN', d:'2026-10-12', t:'23:00', imp:'blocks', src:'Signal', h:'COIN -7.1%, closed below the 50- and 100-day on the crypto sell-off.', so:'<b>Blocks</b>: trend flipped down and the quality gate already fails.', so2:[['t','Support at 320 is 5% away'],['f','Solvency model below threshold']], cite:['Scanner','Daily mark, 12 Oct'] },
+  { sym:'3690.HK', d:'2026-10-13', t:'06:30', imp:'neutral', src:'HKEXnews', h:'Meituan: monthly buyback disclosure, 2.1m shares.', so:'<b>Neutral</b>: routine disclosure; the name is still below the 200-day.', so2:[['t','Downtrend; timing score 33']], cite:['hkexnews.hk','Next day disclosure return'] },
+  { sym:'3690.HK', d:'2026-10-07', t:'11:20', imp:'caution', src:'Reuters (headline)', h:'Meituan says food-delivery subsidies will continue through Q4; margin outlook cut.', so:'<b>Caution</b>: operating margin trend WARN deepens; stays Wait.', so2:[['f','Operating margin trend WARN'],['t','Below the 200-day']], cite:['reuters.com','Headline, 7 Oct'] },
+  { sym:'NVDA', d:'2026-10-07', t:'22:45', imp:'neutral', src:'Yahoo Finance', h:'NVIDIA extends Blackwell supply agreement with a second foundry.', so:'<b>Neutral</b>: IV rank 18 is the reason this name waits, and the story does not move it.', so2:[['t','Premium too thin at any strike in the band']], cite:['finance.yahoo.com','Headline, 7 Oct'] },
+];
+// Market briefs: one per session the job ran (HK open 07:30 HKT, US open 21:00 HKT). Tape numbers come from our own tables.
+const BRIEFS = {
+  '2026-10-13': [
+    { sess:'HK open', time:'07:40', lead:'Quiet US close ahead of Wednesday\'s CPI. HK set to open higher after stronger China export data; HK option premiums are the richer side this week.', tape:[['S&P 500','-0.3%','dn'],['Nasdaq','-0.5%','dn'],['HSI fut','+0.9%','up'],['VIX','17.2'],['VHSI','21.8'],['UST 10y','4.08%'],['USDHKD','7.78'],['USDCNH','7.09']],
+      pts:[['US','<b>Banks start Q3 reporting today</b> (JPM, WFC, C); guidance on credit costs sets the tone for financials. Tech drifted lower on light volume.'],['HK · CN','<b>September exports +6.1% y/y</b>, well above forecasts; Hang Seng futures point to a firm open. Tech names led Monday\'s rebound.'],['Macro','<b>US CPI Wed 20:30 HKT</b>; a hot print would push the 10-year back above 4.2% and lift index volatility into expiry week.'],['Dates','META and MSFT report 29 Oct; TSLA 22 Oct; Tencent 12 Nov (unconfirmed). HK October expiry is Thu 29 Oct.']],
+      forput:'US IV rank is mid-range (38), HK is rich (61). HK premiums pay better this week; for US names prefer expiries past the 15 Oct CPI and outside each earnings date.',
+      srcs:[['07:31','HKEX','Hang Seng Index futures pre-open indication'],['07:05','Yahoo Finance','US stocks edge lower ahead of inflation data'],['06:40','Reuters (headline)','China September exports beat forecasts'],['06:10','CBOE','VIX close 17.2'],['05:55','Company IR','Q3 reporting dates for JPM, WFC, C']] },
+  ],
+  '2026-10-12': [
+    { sess:'HK open', time:'07:35', lead:'Risk-on Monday: HK tech bid after the Qwen3 news, US futures flat. Crypto weak over the weekend.', tape:[['S&P fut','+0.1%','up'],['HSI fut','+1.2%','up'],['VIX','16.4'],['VHSI','20.9'],['UST 10y','4.05%'],['BTC','-6%','dn']],
+      pts:[['HK · CN','<b>Alibaba and Tencent lead the pre-open</b> after the weekend AI product news; HSI futures +1.2%.'],['US','Flat futures; bank earnings start Tuesday.'],['Macro','CPI Wednesday is the week\'s event; no Fed speakers Monday.'],['Dates','JD 31 put expires Friday 17 Oct; BX reports Thu 16 Oct.']],
+      forput:'HK IV rank 58 and rising: good day to sell HK puts on names that are not extended. Keep US sizes normal until CPI.',
+      srcs:[['07:20','HKEX','Pre-open indication'],['07:00','Yahoo Finance','Weekend crypto sell-off'],['06:30','Company IR','BX results date']] },
+    { sess:'US open', time:'21:05', lead:'HK closed +1.4% with tech up 2.3%; Alibaba +5%. COIN -7% pre-market on the crypto sell-off; US cash open quiet.', tape:[['HSI','+1.4%','up'],['HSTECH','+2.3%','up'],['S&P fut','-0.2%','dn'],['VIX','16.9'],['VHSI','21.4'],['UST 10y','4.06%']],
+      pts:[['HK · CN','<b>Alibaba +5%</b>, now 14% above the 50-day: Today moved it from Sell to Wait. Tencent +1.8%, BYD -1.1%.'],['US','COIN -7% pre-market; crypto names gap down. Megacaps flat.'],['Macro','10-year steady at 4.06% ahead of CPI.'],['Dates','TSLA earnings date due this week; META date due this week.']],
+      forput:'No new US puts today on crypto-linked names (COIN already Avoid). Alibaba 150 put waits for a pullback; Tencent 560 put is still the best HK idea.',
+      srcs:[['20:50','HKEX','Close'],['20:30','Yahoo Finance','Pre-market movers'],['20:10','CBOE','VIX']] },
+  ],
+  '2026-10-09': [
+    { sess:'HK open', time:'07:38', lead:'Soft US close on Thursday (-0.6%) after a hawkish Fed speech; HK to open lower. Alibaba IR event after the close.', tape:[['S&P 500','-0.6%','dn'],['HSI fut','-0.7%','dn'],['VIX','18.1'],['VHSI','22.6'],['UST 10y','4.15%']],
+      pts:[['US','<b>Fed\'s Waller flags "no rush" to cut</b>; 10-year +7bp. Tech led the decline.'],['HK · CN','Futures -0.7%; Alibaba hosts a cloud event today.'],['Macro','Jobs report tonight 20:30 HKT.'],['Dates','MSFT 480 put at 21 days on Mon 13 Oct.']],
+      forput:'VIX 18 and VHSI 22.6: both sides pay. A down open in HK is the day to sell the Alibaba 150 and Tencent 560 puts if they hold the 50-day.',
+      srcs:[['07:25','HKEX','Pre-open indication'],['06:55','Yahoo Finance','Fed speech recap'],['06:20','CBOE','VIX']] },
+  ],
+};
+const IMP = { supports:'Supports', caution:'Caution', blocks:'Blocks', neutral:'Neutral' };
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// ---------- state ----------
+let scope = 'shortlist', win = 3, hideNeutral = false, day = TODAY, sessIdx = 0, q = '', calMonth = '2026-10';
+const open = new Set();
+
+// ---------- date helpers (UTC, date-only strings) ----------
+const toMs = s => Date.UTC(+s.slice(0,4), +s.slice(5,7) - 1, +s.slice(8,10));
+const fromMs = ms => new Date(ms).toISOString().slice(0,10);
+const addDays = (s, n) => fromMs(toMs(s) + n * 864e5);
+const fmtDay = s => { const d = new Date(toMs(s)); return `${DOW[d.getUTCDay()]} ${d.getUTCDate()} ${MON[d.getUTCMonth()]}`; };
+const fmtDayYear = s => fmtDay(s) + ' ' + s.slice(0,4);
+const isToday = s => s === TODAY;
+function whenLabel(n) {
+  if (n.d === day) return (isToday(day) ? 'Today ' : '') + n.t;
+  return fmtDay(n.d) + ' ' + n.t;
+}
+
+// ---------- day navigator ----------
+function renderDay() {
+  const past = !isToday(day);
+  document.getElementById('dayMain').textContent = past ? fmtDay(day) : 'Today';
+  document.getElementById('daySub').textContent = past ? day.slice(0,4) + (daysAgo(day) === 1 ? ' · yesterday' : ` · ${daysAgo(day)} days ago`) : fmtDayYear(day);
+  document.getElementById('nextDay').disabled = !past;
+  document.getElementById('backToday').classList.toggle('hidden', !past);
+  document.getElementById('asof').textContent = past ? 'Archive' : 'Fetched 07:40 HKT';
+  document.getElementById('winlabel').textContent = past ? `Up to ${fmtDay(day)}, last` : 'Last';
+}
+const daysAgo = s => Math.round((toMs(TODAY) - toMs(s)) / 864e5);
+function setDay(s) { day = s; sessIdx = BRIEFS[day] ? BRIEFS[day].length - 1 : 0; open.clear(); renderAll(); }
+
+// ---------- calendar ----------
+function renderCal() {
+  const cal = document.getElementById('cal');
+  if (!cal.classList.contains('on')) return;
+  const [y, m] = calMonth.split('-').map(Number);
+  const first = Date.UTC(y, m - 1, 1), nDays = new Date(Date.UTC(y, m, 0)).getUTCDate(), startDow = new Date(first).getUTCDay();
+  const byDay = {};
+  for (const n of ITEMS) {
+    const g = NAMES[n.sym]; if (scope !== 'all' && g.scope !== scope) continue;
+    if (hideNeutral && n.imp === 'neutral') continue;
+    (byDay[n.d] = byDay[n.d] || new Set()).add(n.imp);
+  }
+  const briefDays = new Set(Object.keys(BRIEFS));
+  let cells = DOW.map(d => `<span class="dow">${d.slice(0,2).toUpperCase()}</span>`).join('');
+  for (let i = 0; i < startDow; i++) cells += '<span></span>';
+  for (let d = 1; d <= nDays; d++) {
+    const s = fromMs(Date.UTC(y, m - 1, d));
+    const future = toMs(s) > toMs(TODAY);
+    const imps = byDay[s] ? ['blocks','caution','supports','neutral'].filter(k => byDay[s].has(k)).slice(0,3) : [];
+    cells += `<button type="button" class="d${future ? ' off' : ''}${s === day ? ' sel' : ''}${isToday(s) ? ' today' : ''}" data-day="${s}" ${future ? 'disabled' : ''} aria-label="${fmtDayYear(s)}${imps.length ? ', has news' : ''}">${d}<span class="dots">${imps.map(k => `<i class="${k}"></i>`).join('')}${briefDays.has(s) && !imps.length ? '<i class="neutral" style="opacity:.35"></i>' : ''}</span></button>`;
+  }
+  const nextOff = calMonth >= TODAY.slice(0,7);
+  cal.innerHTML = `
+    <div class="mh"><button type="button" id="calPrev" aria-label="Previous month"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><span>${MON[m - 1]} ${y}</span><button type="button" id="calNext" aria-label="Next month" ${nextOff ? 'disabled style="color:var(--line2)"' : ''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
+    <div class="grid">${cells}</div>
+    <div class="legend"><span><i style="background:var(--fail)"></i>Blocks</span><span><i style="background:var(--warn)"></i>Caution</span><span><i style="background:var(--ok)"></i>Supports</span><span><i style="background:var(--dim)"></i>Neutral</span><span>Dots follow the scope filter</span></div>`;
+  cal.querySelectorAll('[data-day]').forEach(b => b.addEventListener('click', () => { setDay(b.dataset.day); toggleCal(false); }));
+  document.getElementById('calPrev').addEventListener('click', () => { calMonth = addDays(calMonth + '-01', -1).slice(0,7); renderCal(); });
+  if (!nextOff) document.getElementById('calNext').addEventListener('click', () => { calMonth = addDays(calMonth + '-01', 32).slice(0,7); renderCal(); });
+}
+function toggleCal(force) {
+  const cal = document.getElementById('cal'), btn = document.getElementById('calBtn');
+  const on = force ?? !cal.classList.contains('on');
+  cal.classList.toggle('on', on); btn.classList.toggle('on', on); btn.setAttribute('aria-expanded', String(on));
+  if (on) { calMonth = day.slice(0,7); renderCal(); }
+}
+
+// ---------- market brief ----------
+function renderBrief() {
+  const el = document.getElementById('brief'), cnt = document.getElementById('briefcnt');
+  const list = BRIEFS[day] || [];
+  if (!list.length) {
+    cnt.textContent = fmtDay(day);
+    el.innerHTML = `<p class="nob">No brief was written for ${fmtDay(day)}${toMs(day) < toMs('2026-10-08') ? ' (briefs started on 8 Oct)' : ' (weekend or holiday: the job runs on trading days only)'}. The stories below are still searchable.</p>`;
+    return;
+  }
+  const b = list[Math.min(sessIdx, list.length - 1)];
+  cnt.textContent = `${fmtDay(day)} · ${list.length === 2 ? 'HK open and US open' : b.sess} · ${b.srcs.length} sources`;
+  el.classList.remove('x');
+  el.innerHTML = `
+    ${list.length > 1 ? `<div class="sess" role="tablist">${list.map((x, i) => `<button role="tab" class="${i === sessIdx ? 'on' : ''}" data-sess="${i}">${x.sess} ${x.time}</button>`).join('')}</div>` : ''}
+    <p class="lead">${b.lead}</p>
+    <div class="tape num" aria-label="Market snapshot">${b.tape.map(([k, v, c]) => `<span>${k} <b class="${c || ''}">${v}</b></span>`).join('')}</div>
+    <ul class="pts">${b.pts.map(([k, t]) => `<li><span class="tag">${k}</span><span>${t}</span></li>`).join('')}</ul>
+    <div class="forput"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg><span>For put selling: ${b.forput}</span></div>
+    <div class="srcs"><span>Written ${b.time}${isToday(day) ? '' : ' on ' + fmtDay(day)} from ${b.srcs.length} sources. Model summary, every line cited.</span><button type="button" id="briefbtn">Sources ›</button></div>
+    <div class="srclist">${b.srcs.map(([t, s, h]) => `<a href="#src"><span>${t}</span><u>${s}</u><span>${h}</span></a>`).join('')}</div>`;
+  el.querySelectorAll('[data-sess]').forEach(x => x.addEventListener('click', () => { sessIdx = Number(x.dataset.sess); renderBrief(); }));
+  document.getElementById('briefbtn').addEventListener('click', e => {
+    const on = el.classList.toggle('x'); e.currentTarget.textContent = on ? 'Hide sources' : 'Sources ›';
+  });
+}
+
+// ---------- stories ----------
+function esc(s) { return s.replace(/[&<>]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[c])); }
+function hl(s) { if (!q) return s; const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig'); return s.replace(re, '<mark>$1</mark>'); }
+function renderGroups() {
+  const searching = q.length > 0;
+  const from = toMs(day) - (win - 1) * 864e5, to = toMs(day);
+  const syms = Object.keys(NAMES).filter(s => scope === 'all' ? true : NAMES[s].scope === scope);
+  const withNews = [], quiet = [];
+  let total = 0;
+  for (const sym of syms) {
+    const g = NAMES[sym];
+    const items = ITEMS.filter(n => n.sym === sym)
+      .filter(n => searching ? (n.h + ' ' + n.sym + ' ' + g.name + ' ' + n.src).toLowerCase().includes(q.toLowerCase()) : (toMs(n.d) >= from && toMs(n.d) <= to))
+      .filter(n => !(hideNeutral && n.imp === 'neutral'))
+      .sort((a, b) => (b.d + b.t).localeCompare(a.d + a.t));
+    total += items.length;
+    if (items.length) withNews.push({ sym, ...g, items }); else quiet.push(sym);
+  }
+  const html = withNews.map(g => `
+    <div class="card grp ${g.cls}">
+      <div class="gh">
+        <span class="sym">${g.sym}<small>${g.name}</small></span>
+        <span class="px num">${g.px.toFixed(2)}<small class="${g.chg > 0 ? 'up' : g.chg < 0 ? 'dn' : 'flat'}">${g.chg > 0 ? '+' : ''}${g.chg.toFixed(1)}%</small></span>
+        <span class="stand">${g.stand}${g.m ? `<span class="m">${g.m}</span>` : ''}<span class="then">now</span></span>
+      </div>
+      ${g.items.map((n, i) => { const id = g.sym + '#' + n.d + n.t; return `
+      <button class="item ${n.imp}${open.has(id) ? ' x' : ''}" type="button" data-id="${id}" aria-expanded="${open.has(id)}">
+        <span class="ih"><span class="imp ${n.imp}"><i></i>${IMP[n.imp]}</span><span>${n.src}</span><span class="when">${whenLabel(n)}</span></span>
+        <h3>${hl(esc(n.h))}</h3>
+        <span class="so">${n.so}</span>
+        <span class="more">
+          ${n.then ? `<span class="kv"><span class="k t" style="background:var(--panel2);color:var(--faint)">↺</span><span>Standing on ${fmtDay(n.d)}: ${n.then}. The impact line was written against that.</span></span>` : ''}
+          ${n.so2.map(([k, t]) => `<span class="kv"><span class="k ${k}">${k.toUpperCase()}</span><span>${t}</span></span>`).join('')}
+          <span class="cite"><span>Source</span><u>${n.cite[0]}</u><span>${n.cite[1]}</span></span>
+          <span class="acts"><span class="btn sm">Source</span><span class="btn sm">${n.attributed ? 'Full attribution' : 'Ask why'}</span><span class="btn sm primary">${g.scope === 'positions' ? 'Positions ›' : 'Today ›'}</span></span>
+        </span>
+      </button>`; }).join('')}
+    </div>`).join('');
+  const quietHtml = quiet.length && !searching ? `
+    <div class="card quiet"><b>Nothing ${win === 1 ? (isToday(day) ? 'in the last 24h' : 'on ' + fmtDay(day)) : `in the ${win} days to ${fmtDay(day)}`}:</b> ${quiet.join(' · ')}</div>` : '';
+  document.getElementById('groups').innerHTML = html + quietHtml;
+  document.getElementById('empty').classList.toggle('hidden', !!(html || quietHtml));
+  document.getElementById('empty').textContent = searching ? `No headlines match "${q}".` : 'Nothing in this window for these names.';
+  document.getElementById('winrow').classList.toggle('hidden', searching);
+  const res = document.getElementById('resline');
+  res.innerHTML = searching ? `<b>${total}</b> ${total === 1 ? 'story' : 'stories'} matching "${esc(q)}" across all days, ${scope === 'all' ? 'all watched names' : scope}` :
+    `<b>${total}</b> ${total === 1 ? 'story' : 'stories'} ${win === 1 ? (isToday(day) ? 'in the last 24h' : 'on ' + fmtDay(day)) : `in the ${win} days to ${isToday(day) ? 'today' : fmtDay(day)}`}`;
+  document.querySelectorAll('.item[data-id]').forEach(b => b.addEventListener('click', () => {
+    const id = b.dataset.id; open.has(id) ? open.delete(id) : open.add(id); renderGroups();
+  }));
+}
+function renderAll() { renderDay(); renderBrief(); renderGroups(); renderCal(); }
+
+// ---------- wiring ----------
+document.querySelectorAll('[data-scope]').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('[data-scope]').forEach(x => x.classList.toggle('on', x === b)); scope = b.dataset.scope; renderGroups(); renderCal();
+}));
+document.querySelectorAll('[data-win]').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('[data-win]').forEach(x => x.classList.toggle('on', x === b)); win = Number(b.dataset.win); renderGroups();
+}));
+document.getElementById('hideneutral').addEventListener('change', e => { hideNeutral = e.target.checked; renderGroups(); renderCal(); });
+document.querySelectorAll('[data-toggle]').forEach(b => b.addEventListener('click', () => {
+  const sec = document.getElementById(b.dataset.toggle);
+  b.setAttribute('aria-expanded', String(!sec.classList.toggle('closed')));
+}));
+document.getElementById('prevDay').addEventListener('click', () => setDay(addDays(day, -1)));
+document.getElementById('nextDay').addEventListener('click', () => { if (!isToday(day)) setDay(addDays(day, 1)); });
+document.getElementById('backToday').addEventListener('click', () => setDay(TODAY));
+document.getElementById('dayLabel').addEventListener('click', () => toggleCal());
+document.getElementById('calBtn').addEventListener('click', () => toggleCal());
+document.getElementById('searchBtn').addEventListener('click', () => {
+  const row = document.getElementById('searchrow'), btn = document.getElementById('searchBtn');
+  const on = row.classList.toggle('hidden') === false; btn.classList.toggle('on', on); btn.setAttribute('aria-expanded', String(on));
+  if (on) document.getElementById('q').focus(); else { q = ''; document.getElementById('q').value = ''; renderGroups(); }
+});
+document.getElementById('q').addEventListener('input', e => { q = e.target.value.trim(); renderGroups(); });
+document.getElementById('clearq').addEventListener('click', () => { q = ''; document.getElementById('q').value = ''; renderGroups(); document.getElementById('q').focus(); });
+renderAll();
+</script>
+</body>
+</html>

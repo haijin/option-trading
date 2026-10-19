@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <channel>
+        <title>Markets</title>
+        <item>
+            <title>Global growth forecast raised as sample AI investment offsets a sample shock: IMF </title>
+            <link>https://www.cnbc.com/2026/10/13/sample-global-growth-forecast.html</link>
+            <description>A sample forecast was raised on investment in AI.</description>
+            <pubDate>Mon, 12 Oct 2026 20:30:00 GMT</pubDate>
+        </item>
+        <item>
+            <title>Exampleland&#8217;s retail inflation rises to 4.10% in September, above estimates</title>
+            <link>https://www.cnbc.com/2026/10/12/sample-retail-inflation-september.html</link>
+            <description>Sample food prices pushed inflation above forecasts.</description>
+            <pubDate>Mon, 12 Oct 2026 13:00:00 GMT</pubDate>
+        </item>
+    </channel>
+</rss>

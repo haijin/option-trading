@@ -1,0 +1,14 @@
+# E2E journal: all short puts. Totals are hand-computed (US USD, HK HKD) and asserted in tests/e2e/scenarios.test.ts:
+#   AAPL closed   (3.50 - 1.20) x 100 x 2 = 460.00 - 2.60 fees          =  457.40
+#   MSFT expired  2.10 x 100 x 1          = 210.00 - 1.30 fees          =  208.70
+#   NVDA assigned (4.00 - max(0, 170 - 162)) x 100 x 1 = -400.00 - 1.30 = -401.30   (mtm_at_assignment, not a full win)
+#   US total 264.80
+#   0005 closed   (1.20 - 0.50) x 400 x 3 = 840.00 - 90 fees            =  750.00
+#   0700 open     (no P&L yet; blocks new recommendations on 0700 until closed)
+#   HK total 750.00
+open_date,symbol,market,expiry,strike,multiplier,contracts,credit,open_fees,close_date,close_price,close_fees,outcome,rolled_to_row,spot,underlying_close
+2026-08-03,AAPL,US,2026-09-04,300,100,2,3.50,1.30,2026-08-21,1.20,1.30,closed,,320,
+2026-08-10,MSFT,US,2026-09-18,440,100,1,2.10,1.30,,,0,expired,,520,
+2026-08-17,NVDA,US,2026-09-18,170,100,1,4.00,1.30,2026-09-18,,0,assigned,,180,162.00
+2026-08-24,0005,HK,2026-09-29,90,400,3,1.20,45,2026-09-10,0.50,45,closed,,98,
+2026-09-30,0700,HK,2026-10-29,380,100,2,6.00,30,,,0,open,,410,

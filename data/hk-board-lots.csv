@@ -1,0 +1,49 @@
+# HK board lots = option contract multiplier (docs/00 D8). YOU maintain this file; `watchlist add --lot N` overrides it.
+# Board lots change over time: verify against your broker or HKEX before relying on a new name.
+# For some names the OPTION contract size is a multiple of the stock board lot (checked against moomoo OpenD on 2026-10-12:
+# SMIC 2500, BYD 500, Xiaomi 1000, China Vanke 1000, Meituan 500, JD 500, Baidu 150, Trip.com 150, Alibaba 500). The value below is the contract size;
+# the Futu chain import refuses a name whose feed multiplier differs from it.
+symbol,lot,name
+0001,500,CK Hutchison
+0002,500,CLP Holdings
+0003,1000,HK and China Gas
+0005,400,HSBC Holdings
+0011,100,Hang Seng Bank
+0016,500,Sun Hung Kai Properties
+0027,1000,Galaxy Entertainment
+0066,500,MTR Corporation
+0175,2000,Geely Automobile
+0267,500,CITIC
+0288,2000,WH Group
+0386,2000,Sinopec Corp
+0388,100,HKEX
+0669,500,Techtronic Industries
+0688,2000,China Overseas Land
+0700,100,Tencent
+0762,2000,China Unicom
+0823,100,Link REIT
+0857,2000,PetroChina
+0883,1000,CNOOC
+0939,1000,China Construction Bank
+0941,500,China Mobile
+1088,500,China Shenhua
+1299,200,AIA Group
+1398,1000,ICBC
+1810,1000,Xiaomi
+1928,400,Sands China
+2020,200,Anta Sports
+2318,500,Ping An Insurance
+2319,1000,Mengniu Dairy
+2388,500,BOC Hong Kong
+2628,1000,China Life
+3690,500,Meituan
+3988,1000,Bank of China
+9988,500,Alibaba
+0981,2500,SMIC
+1211,500,BYD
+2202,1000,China Vanke
+3986,100,GigaDevice
+9618,500,JD.com
+9888,150,Baidu
+9961,150,Trip.com
+9992,200,Pop Mart

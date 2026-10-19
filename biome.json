@@ -1,0 +1,113 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    "includes": ["**", "!drizzle/meta", "!tests/fixtures"]
+  },
+  "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2, "lineWidth": 120 },
+  "javascript": {
+    "formatter": { "quoteStyle": "single", "semicolons": "always", "trailingCommas": "all" }
+  },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "style": { "noNonNullAssertion": "off", "useTemplate": "off" },
+      "suspicious": { "noExplicitAny": "warn" },
+      "complexity": { "noForEach": "off" }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["src/skills/**", "src/core/**", "src/indicators/**", "src/valuation/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  { "group": ["**/db", "**/db/**"], "message": "skills, core and indicators must not import db" },
+                  {
+                    "group": ["**/providers", "**/providers/**"],
+                    "message": "only cli and server may import providers"
+                  },
+                  { "group": ["**/cli", "**/cli/**"], "message": "only cli code may import cli" },
+                  { "group": ["**/server", "**/server/**"], "message": "nothing below the server may import it" }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/skills/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "drizzle-orm": "skills are pure functions: no ORM",
+                  "pg": "skills are pure functions: no database driver"
+                },
+                "patterns": [
+                  { "group": ["**/db", "**/db/**"], "message": "skills may import core and indicators only" },
+                  {
+                    "group": ["**/providers", "**/providers/**"],
+                    "message": "skills may import core and indicators only"
+                  },
+                  { "group": ["**/cli", "**/cli/**"], "message": "skills may import core and indicators only" }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/db/**", "src/indicators/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["**/providers", "**/providers/**"],
+                    "message": "only cli and server may import providers"
+                  },
+                  { "group": ["**/cli", "**/cli/**"], "message": "only cli code may import cli" },
+                  { "group": ["**/server", "**/server/**"], "message": "nothing below the server may import it" }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/providers/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  { "group": ["**/skills", "**/skills/**"], "message": "providers must not depend on skills" },
+                  { "group": ["**/cli", "**/cli/**"], "message": "only cli code may import cli" },
+                  { "group": ["**/server", "**/server/**"], "message": "nothing below the server may import it" }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

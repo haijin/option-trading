@@ -1,0 +1,145 @@
+/* Login page: one centred card on the app canvas. Colours, radii and type come from the tokens in styles.css, so the
+   dark theme and the phone sizes need nothing extra here. */
+
+.login-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: calc(24px + var(--safe-t)) 16px calc(24px + var(--safe-b));
+  background: var(--bg);
+}
+
+/* The phone's collapsing address bar makes 100vh too tall; dvh follows it where supported. */
+@supports (min-height: 100dvh) {
+  .login-shell {
+    min-height: 100dvh;
+  }
+}
+
+.login-card {
+  width: min(420px, 100%);
+  display: grid;
+  gap: 16px;
+  padding: 24px 22px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow);
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.login-brand img {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+
+.login-brand h1 {
+  font-size: 22px;
+}
+
+.login-brand p {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.login-card h2 {
+  font-size: 18px;
+}
+
+.login-form {
+  display: grid;
+  gap: 12px;
+}
+
+.login-form .note {
+  margin: 0;
+}
+
+.login-field {
+  display: grid;
+  gap: 4px;
+}
+
+.login-field > label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.login-field .hint {
+  font-size: 12px;
+  color: var(--faint);
+}
+
+.login-or {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.login-or::before,
+.login-or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.login-google {
+  display: grid;
+  gap: 6px;
+}
+
+.login-google .note {
+  margin: 0;
+  text-align: center;
+}
+
+.btn.wide {
+  width: 100%;
+  min-height: 44px;
+}
+
+.btn.google {
+  background: var(--panel);
+  border-color: var(--line2);
+}
+
+.pw {
+  position: relative;
+  display: flex;
+}
+
+.pw input {
+  flex: 1;
+  padding-right: 64px;
+}
+
+.pw .pw-toggle {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  min-height: 30px;
+  transform: translateY(-50%);
+}
+
+.login-foot {
+  width: min(420px, 100%);
+  font-size: 12px;
+  color: var(--faint);
+  text-align: center;
+}

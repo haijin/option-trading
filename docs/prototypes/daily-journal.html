@@ -1,0 +1,865 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Daily Journal prototype</title>
+<meta name="description" content="Option_Trading daily investment journal: rich-text entries with images and tables, AI rewrite that never overwrites without asking, revision history. Static prototype with sample data." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* Layout: phone first, one pane at a time under 900px (list OR editor), two panes above. Same tokens as dashboard-v2 / the live app. */
+:root {
+  color-scheme: light;
+  --bg:#f7f8fa; --panel:#fff; --panel2:#f0f2f5; --ink:#111b21; --ink2:#3b4a54; --muted:#54656f; --faint:#667781; --dim:#8696a0;
+  --line:#e9edef; --line2:#d1d7db; --brand:#25d366; --brand-dark:#128c7e; --brand-deep:#075e54; --brand-soft:#dcf8c6;
+  --accent:#128c7e; --accentbg:#d4f7df;
+  --ok:#075e54; --okbg:rgba(37,211,102,.16); --warn:#856404; --warnbg:#fff3c4; --fail:#c5221f; --failbg:#fde8e6;
+  --blue:#0086cb; --bluebg:rgba(52,183,241,.16); --chip:#f0f2f5; --ai:#6d4bd6; --aibg:#efeafc;
+  --addbg:#dcf8c6; --delbg:#fde8e6;
+  --shadow:0 1px 1px rgba(0,0,0,.04),0 1px 3px rgba(11,20,26,.06);
+  --r-sm:6px; --r-md:8px; --r-lg:12px; --tabbar:62px; --toolbar:50px;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --sans:"Inter",-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  color-scheme:dark; --bg:#0b141a; --panel:#111b21; --panel2:#202c33; --ink:#e9edef; --ink2:#d1d7db; --muted:#aebac1; --faint:#8696a0; --dim:#667781;
+  --line:#222d34; --line2:#2a3942; --brand:#00a884; --brand-dark:#00a884; --brand-deep:#005c4b; --brand-soft:#005c4b; --accent:#00a884; --accentbg:#103a31;
+  --ok:#4cd18c; --okbg:#0f2f27; --warn:#f5c542; --warnbg:#3a2e0a; --fail:#f8766d; --failbg:#3b1a1e;
+  --blue:#53bdeb; --bluebg:#12303d; --chip:#202c33; --ai:#b39df5; --aibg:#2a2340; --addbg:#0f2f27; --delbg:#3b1a1e; --shadow:none; } }
+:root[data-theme="dark"] {
+  color-scheme:dark; --bg:#0b141a; --panel:#111b21; --panel2:#202c33; --ink:#e9edef; --ink2:#d1d7db; --muted:#aebac1; --faint:#8696a0; --dim:#667781;
+  --line:#222d34; --line2:#2a3942; --brand:#00a884; --brand-dark:#00a884; --brand-deep:#005c4b; --brand-soft:#005c4b; --accent:#00a884; --accentbg:#103a31;
+  --ok:#4cd18c; --okbg:#0f2f27; --warn:#f5c542; --warnbg:#3a2e0a; --fail:#f8766d; --failbg:#3b1a1e;
+  --blue:#53bdeb; --bluebg:#12303d; --chip:#202c33; --ai:#b39df5; --aibg:#2a2340; --addbg:#0f2f27; --delbg:#3b1a1e; --shadow:none; }
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--sans);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+a{color:inherit;text-decoration:none}
+button{font:inherit;border:0;background:none;color:inherit;cursor:pointer;padding:0}
+button:focus-visible,[contenteditable]:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+svg{display:block}
+[hidden]{display:none!important}
+
+/* frame */
+.app{min-height:100%;display:flex;flex-direction:column}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--panel);border-bottom:1px solid var(--line);padding:12px 16px 10px}
+.top .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.top h1{margin:0;font-size:22px;font-weight:700;color:var(--brand-deep);letter-spacing:-.02em}
+.top .asof{font-size:12.5px;color:var(--faint);white-space:nowrap}
+.top .tool{font-size:14px;color:var(--accent);font-weight:600;padding:4px 0}
+.body{flex:1;padding:14px 16px calc(var(--tabbar) + 28px);display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-content:start}
+.body > *{min-width:0}
+.pane{display:none}
+.pane.on{display:contents}
+
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:6;height:calc(var(--tabbar) + env(safe-area-inset-bottom,0px));padding:6px 2px env(safe-area-inset-bottom,0px);background:var(--panel);border-top:1px solid var(--line);display:flex;justify-content:space-around}
+.tabbar a{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:600;color:var(--dim);padding:4px 0;min-width:0}
+.tabbar a.active{color:var(--brand-dark)}
+.tabbar svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* generic */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:var(--r-sm);font-size:11px;font-weight:600;background:var(--chip);color:var(--muted);white-space:nowrap;line-height:1.5}
+.chip.ok{background:var(--okbg);color:var(--ok)} .chip.warn{background:var(--warnbg);color:var(--warn)} .chip.fail{background:var(--failbg);color:var(--fail)} .chip.blue{background:var(--bluebg);color:var(--blue)} .chip.ai{background:var(--aibg);color:var(--ai)}
+.chip.tk{font-family:var(--mono);font-weight:600;background:var(--accentbg);color:var(--brand-deep)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:var(--r-md);font-weight:600;font-size:14px;background:var(--panel2);color:var(--ink);min-height:40px}
+.btn.primary{background:var(--brand-dark);color:#fff}
+.btn.ai{background:var(--ai);color:#fff}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.danger{background:var(--failbg);color:var(--fail)}
+.btn.sm{padding:7px 12px;font-size:13px;min-height:34px}
+.btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.seg{display:flex;gap:4px;background:var(--panel2);padding:3px;border-radius:999px}
+.seg button{flex:1;padding:6px 6px;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap;min-height:30px}
+.seg button.on{background:var(--panel);color:var(--ink);box-shadow:var(--shadow)}
+.seg button small{color:var(--dim);font-weight:500;margin-left:3px}
+.search{display:flex;align-items:center;gap:8px;background:var(--panel2);border-radius:var(--r-md);padding:8px 12px}
+.search svg{width:16px;height:16px;stroke:var(--dim);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.search input{flex:1;min-width:0;border:0;background:none;color:var(--ink);font:inherit;font-size:14px}
+.search input::placeholder{color:var(--dim)}
+.sumline{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.sumline b{color:var(--ink);font-weight:600}
+.foot{font-size:11.5px;color:var(--faint);text-align:center;padding:4px 8px 0}
+.toast{position:fixed;left:50%;bottom:calc(var(--tabbar) + env(safe-area-inset-bottom,0px) + 14px);transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:999px;font-size:13.5px;font-weight:600;display:flex;gap:12px;align-items:center;z-index:30;box-shadow:0 6px 24px rgba(0,0,0,.25);max-width:calc(100% - 32px)}
+.toast button{color:var(--brand);font-weight:700}
+
+/* week strip */
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.week button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0 6px;border-radius:var(--r-md);font-size:11px;font-weight:600;color:var(--faint);min-height:56px}
+.week button b{font-size:15px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.week button i{width:6px;height:6px;border-radius:50%;background:transparent}
+.week button.has i{background:var(--brand)}
+.week button.today{background:var(--accentbg)} .week button.today b{color:var(--brand-deep)}
+.week button.sel{outline:2px solid var(--brand-dark);outline-offset:-2px}
+.week button.wknd b{color:var(--dim)}
+
+/* month calendar */
+.month{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.month .dow{font-size:10.5px;font-weight:700;color:var(--dim);text-align:center;letter-spacing:.04em;padding-bottom:4px}
+.month button{aspect-ratio:1;max-width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:var(--r-sm);font-size:13px;font-variant-numeric:tabular-nums;color:var(--ink);min-height:38px}
+.month button.pad{color:var(--dim);opacity:.5}
+.month button.has{background:var(--okbg);font-weight:700}
+.month button.today{outline:2px solid var(--brand-dark);outline-offset:-2px}
+.month button i{display:flex;gap:2px;height:4px}
+.month button i s{width:4px;height:4px;border-radius:50%;display:block;text-decoration:none}
+.month button i s.b{background:var(--ok)} .month button i s.n{background:var(--dim)} .month button i s.r{background:var(--fail)}
+
+/* entry list */
+.entries{display:grid;gap:10px}
+.ent{padding:13px 14px 12px;display:grid;gap:6px;text-align:left;width:100%;border-left:3px solid var(--line2)}
+.ent.bull{border-left-color:var(--brand)} .ent.bear{border-left-color:var(--fail)} .ent.neut{border-left-color:var(--line2)}
+.ent.draft{border-left-style:dashed}
+.ent .hd{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--faint)}
+.ent .hd .d{font-weight:700;color:var(--ink);font-size:14px}
+.ent .hd .when{margin-left:auto;white-space:nowrap}
+.ent h3{margin:0;font-size:15px;font-weight:600;line-height:1.35}
+.ent .ex{font-size:13.5px;color:var(--ink2);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ent .with{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:2px}
+.ent .with .n{font-size:12px;color:var(--faint);margin-left:auto;white-space:nowrap}
+.ent .thumb{display:grid;grid-template-columns:1fr 64px;gap:12px;align-items:start}
+.ent .thumb svg{width:64px;height:44px;border-radius:4px;border:1px solid var(--line)}
+.lesson{padding:12px 14px;display:grid;gap:4px;border-left:3px solid var(--warn)}
+.lesson .q{font-size:14px;line-height:1.4}
+.lesson .src{font-size:12px;color:var(--faint);display:flex;gap:8px;align-items:center}
+
+/* editor */
+.ed-top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--panel);border-bottom:1px solid var(--line);padding:10px 12px 8px}
+.ed-top .row{display:flex;align-items:center;gap:8px}
+.ed-top .back{display:inline-flex;align-items:center;gap:2px;color:var(--accent);font-weight:600;font-size:15px;padding:6px 4px 6px 0}
+.ed-top .back svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.ed-top .ttl{flex:1;min-width:0;text-align:center}
+.ed-top .ttl b{display:block;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ed-top .ttl span{display:block;font-size:11.5px;color:var(--faint)}
+.ed-top .ttl span.saving{color:var(--warn)}
+.ed-top .more{width:36px;height:36px;display:grid;place-items:center;border-radius:50%;color:var(--muted)}
+.ed-top .more svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.meta{display:grid;gap:10px}
+.meta .r{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.meta .lbl{font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;width:58px;flex:none}
+.meta .seg{flex:1;min-width:200px}
+.meta .seg button.on.b{color:var(--ok)} .meta .seg button.on.r{color:var(--fail)}
+.meta input.ti{flex:1;min-width:0;border:0;background:var(--panel2);border-radius:var(--r-md);padding:8px 12px;color:var(--ink);font:inherit;font-size:14px}
+.meta .tk{display:flex;gap:6px;flex-wrap:wrap;flex:1;align-items:center;font-size:12px;color:var(--faint)}
+
+.title-in{width:100%;border:0;background:none;color:var(--ink);font:inherit;font-size:20px;font-weight:700;letter-spacing:-.01em;padding:2px 0}
+.title-in::placeholder{color:var(--dim)}
+
+.editor{padding:4px 14px 16px;min-height:280px}
+.doc{outline:0;font-size:15.5px;line-height:1.55;color:var(--ink)}
+.doc:empty::before{content:attr(data-placeholder);color:var(--dim)}
+.doc h2{font-size:17px;margin:18px 0 6px;letter-spacing:-.01em}
+.doc h2:first-child{margin-top:8px}
+.doc p{margin:0 0 10px}
+.doc ul,.doc ol{margin:0 0 10px;padding-left:22px}
+.doc li{margin:2px 0}
+.doc ul.todo{list-style:none;padding-left:2px}
+.doc ul.todo li{display:flex;gap:8px;align-items:flex-start}
+.doc ul.todo li input{margin-top:4px;accent-color:var(--brand-dark);width:17px;height:17px;flex:none}
+.doc ul.todo li.done{color:var(--faint);text-decoration:line-through}
+.doc .tk{font-family:var(--mono);font-weight:600;color:var(--brand-deep);background:var(--accentbg);padding:0 4px;border-radius:4px;font-size:.92em}
+.doc .tbl{overflow-x:auto;margin:6px 0 12px;border:1px solid var(--line);border-radius:var(--r-md)}
+.doc table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:360px}
+.doc th,.doc td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.doc th{font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;background:var(--panel2)}
+.doc tr:last-child td{border-bottom:0}
+.doc td.num,.doc th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.doc td.up{color:var(--ok)} .doc td.dn{color:var(--fail)}
+.doc figure{margin:8px 0 12px}
+.doc figure svg,.doc figure img{width:100%;max-width:100%;height:auto;border-radius:var(--r-md);border:1px solid var(--line);background:var(--panel)}
+.doc figcaption{font-size:12px;color:var(--faint);margin-top:4px}
+.doc blockquote{margin:0 0 10px;padding:8px 12px;border-left:3px solid var(--warn);background:var(--warnbg);border-radius:0 var(--r-sm) var(--r-sm) 0;color:var(--ink)}
+.doc blockquote p{margin:0}
+.doc .snap{border:1px dashed var(--line2);border-radius:var(--r-md);padding:8px 10px 2px;margin:6px 0 12px;background:var(--panel2)}
+.doc .snap .cap{font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:flex;gap:8px;align-items:center}
+.doc .snap .cap span{font-weight:500;text-transform:none;letter-spacing:0;margin-left:auto}
+.doc .snap .tbl{border:0;background:var(--panel);margin:0 0 8px}
+
+/* toolbar fixed above the tab bar on phones, inline on desktop */
+.toolbar{position:fixed;left:0;right:0;bottom:calc(var(--tabbar) + env(safe-area-inset-bottom,0px));z-index:6;height:var(--toolbar);background:var(--panel);border-top:1px solid var(--line);display:none;align-items:center;gap:2px;padding:0 8px;overflow-x:auto;scrollbar-width:none}
+.toolbar::-webkit-scrollbar{display:none}
+.toolbar.on{display:flex}
+.toolbar button{flex:none;width:40px;height:38px;border-radius:var(--r-md);display:grid;place-items:center;color:var(--ink2);font-weight:700;font-size:14px}
+.toolbar button:active,.toolbar button.on{background:var(--panel2);color:var(--ink)}
+.toolbar button svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.toolbar .sep{width:1px;height:24px;background:var(--line);margin:0 4px;flex:none}
+.toolbar .aibtn{width:auto;padding:0 12px;background:var(--aibg);color:var(--ai);gap:6px;display:inline-flex;align-items:center;margin-left:auto}
+.toolbar .aibtn svg{width:17px;height:17px}
+.ed-foot{display:flex;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--faint);padding:0 2px}
+.ed-foot span b{color:var(--muted);font-weight:600}
+
+/* bottom sheet */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:20;display:none}
+.scrim.on{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--panel);border-radius:16px 16px 0 0;max-height:92dvh;display:none;flex-direction:column;box-shadow:0 -8px 30px rgba(0,0,0,.2);padding-bottom:env(safe-area-inset-bottom,0px)}
+.sheet.on{display:flex}
+.sheet .grab{width:38px;height:4px;border-radius:2px;background:var(--line2);margin:8px auto 0}
+.sheet .sh{display:flex;align-items:center;gap:10px;padding:10px 16px 10px}
+.sheet .sh h3{margin:0;font-size:16px;font-weight:700;flex:1}
+.sheet .sh .x{width:32px;height:32px;border-radius:50%;background:var(--panel2);display:grid;place-items:center;color:var(--muted)}
+.sheet .sh .x svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round}
+.sheet .sb{overflow-y:auto;padding:0 16px 16px;display:grid;gap:12px;align-content:start}
+.sheet .sf{display:flex;gap:8px;padding:10px 16px 12px;border-top:1px solid var(--line)}
+.sheet .sf .btn{flex:1}
+
+/* AI sheet */
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mode{display:grid;gap:3px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-md);text-align:left;background:var(--panel)}
+.mode.on{border-color:var(--ai);background:var(--aibg)}
+.mode b{font-size:14px;font-weight:700}
+.mode span{font-size:12px;color:var(--muted);line-height:1.35}
+.mode.on span{color:var(--ink2)}
+.custom{width:100%;border:1px solid var(--line2);background:var(--panel);border-radius:var(--r-md);padding:9px 12px;font:inherit;font-size:14px;color:var(--ink);resize:vertical;min-height:44px}
+.optrow{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--ink2)}
+.optrow .sw{margin-left:auto;width:44px;height:26px;border-radius:13px;background:var(--line2);position:relative;flex:none;transition:background .15s}
+.optrow .sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.optrow .sw.on{background:var(--brand-dark)} .optrow .sw.on::after{transform:translateX(18px)}
+.note{font-size:12.5px;color:var(--faint);line-height:1.4}
+.prog{display:grid;gap:6px;padding:12px 14px;background:var(--panel2);border-radius:var(--r-md);font-size:13px;color:var(--ink2);font-family:var(--mono)}
+.prog .l{display:flex;gap:8px;align-items:center}
+.prog .l i{width:8px;height:8px;border-radius:50%;background:var(--ai);flex:none;animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.3}}
+@media (prefers-reduced-motion: reduce){.prog .l i{animation:none}}
+.res-tabs{display:flex;gap:4px;background:var(--panel2);padding:3px;border-radius:999px}
+.res-tabs button{flex:1;padding:6px;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted)}
+.res-tabs button.on{background:var(--panel);color:var(--ink);box-shadow:var(--shadow)}
+.preview{border:1px solid var(--line);border-radius:var(--r-md);padding:4px 14px 8px;background:var(--panel)}
+.preview .doc{font-size:14.5px}
+.diff{border:1px solid var(--line);border-radius:var(--r-md);padding:10px 14px;background:var(--panel);font-size:14.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.diff ins{background:var(--addbg);text-decoration:none;color:var(--ink);border-radius:3px;padding:0 1px}
+.diff del{background:var(--delbg);color:var(--fail);border-radius:3px;padding:0 1px}
+.diff .kept{display:block;margin:6px 0;padding:4px 10px;border-left:3px solid var(--line2);color:var(--faint);font-size:12.5px;font-style:italic}
+.costline{display:flex;gap:12px;font-size:12.5px;color:var(--faint);flex-wrap:wrap}
+.costline b{color:var(--muted);font-weight:600}
+
+/* history sheet */
+.hist{display:grid;gap:0;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}
+.hist .h{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);font-size:14px}
+.hist .h:last-child{border-bottom:0}
+.hist .h .t{font-family:var(--mono);font-size:12.5px;color:var(--faint)}
+.hist .h .w{display:grid;gap:1px}
+.hist .h .w small{font-size:12px;color:var(--faint)}
+.hist .h .cur{font-size:12px;font-weight:700;color:var(--ok)}
+.menu{display:grid;gap:0;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}
+.menu button{display:flex;gap:12px;align-items:center;padding:13px 14px;border-bottom:1px solid var(--line);font-size:15px;text-align:left;width:100%}
+.menu button:last-child{border-bottom:0}
+.menu button svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;color:var(--muted)}
+.menu button.danger{color:var(--fail)} .menu button.danger svg{color:var(--fail)}
+.tpls{display:grid;gap:8px}
+.tpl{display:grid;gap:3px;padding:11px 12px;border:1px solid var(--line);border-radius:var(--r-md);text-align:left}
+.tpl b{font-size:14px} .tpl span{font-size:12.5px;color:var(--muted);line-height:1.35}
+
+/* desktop: two panes, inline toolbar */
+@media (min-width: 900px) {
+  .tabbar{display:none}
+  .body{padding:22px 24px 40px;max-width:1180px;margin:0 auto;width:100%;grid-template-columns:380px minmax(0,1fr);gap:0 24px;align-items:start}
+  .pane,.pane.on{display:grid;gap:14px;align-content:start;min-width:0}
+  #pane-list{display:contents}
+  #pane-list-body{grid-column:1}
+  #pane-editor{grid-column:2}
+  .top{padding:12px 24px}
+  .top .inner{max-width:1180px;margin:0 auto}
+  .ed-top{position:static;border:1px solid var(--line);border-radius:var(--r-lg) var(--r-lg) 0 0;padding:12px 16px}
+  .ed-top .back{display:none}
+  .ed-top .ttl{text-align:left}
+  .editor{border:1px solid var(--line);border-top:0;background:var(--panel);min-height:420px}
+  .toolbar{position:static;display:flex;height:auto;border:1px solid var(--line);border-top:0;border-radius:0 0 var(--r-lg) var(--r-lg);padding:6px 10px;flex-wrap:wrap}
+  .meta-wrap{border:1px solid var(--line);border-top:0;background:var(--panel);padding:12px 16px}
+  .sheet{left:50%;right:auto;bottom:auto;top:50%;transform:translate(-50%,-50%);width:min(680px,calc(100% - 48px));border-radius:var(--r-lg);max-height:86vh}
+  .toast{bottom:28px}
+}
+.meta-wrap{display:grid;gap:10px;padding:0 2px}
+
+/* touch */
+button,a,input,textarea,[role="switch"]{touch-action:manipulation}
+.sheet .sb{min-height:0;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.doc .tbl,.toolbar{-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.doc ul.todo li{min-height:44px;align-items:center}
+.doc ul.todo li input{width:22px;height:22px;margin:0}
+.doc ul.todo li span{padding:10px 0;flex:1;min-width:0}
+
+/* phone: iOS zooms any focused field under 16px, so every field is 16px; every control at least 44px tall */
+@media (max-width: 899px) {
+  :root{--toolbar:54px}
+  .search input,.meta input.ti,.custom,.doc{font-size:16px}
+  .search{padding:10px 12px}
+  .toolbar button{width:44px;height:44px}
+  .toolbar .aibtn{height:44px}
+  .ed-top .more{width:44px;height:44px}
+  .ed-top .back{min-height:44px}
+  .meta .seg button,.seg button,.res-tabs button{min-height:40px}
+  .meta input.ti,.title-in,.search input{min-height:44px}
+  .search{padding:0 12px}
+  .optrow .sw{width:51px;height:31px;border-radius:16px} .optrow .sw::after{width:25px;height:25px} .optrow .sw.on::after{transform:translateX(20px)}
+  .week button{min-height:60px}
+  .month button{min-height:44px}
+  .sheet .sh .x{width:40px;height:40px}
+  .btn{min-height:44px}
+  .btn.sm{min-height:40px}
+  .top .tool{min-height:44px;display:inline-flex;align-items:center}
+  /* keyboard open while editing: the tab bar hides, the toolbar is pinned above the keyboard by script */
+  body.kb .tabbar{display:none}
+}
+/* 320 px phones: eight 40 px tabs; labels drop to 9 px so Research and Positions still fit */
+@media (max-width: 359px) {
+  .tabbar a{font-size:9px;letter-spacing:-.02em}
+  .tabbar svg{width:20px;height:20px}
+  .sheet .sf .btn{padding:10px 8px;font-size:13px}
+  body.kb .body{padding-bottom:calc(var(--toolbar) + 24px)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ================= LIST PANE ================= -->
+  <div class="pane on" id="pane-list">
+    <header class="top"><div class="inner">
+      <div class="row"><h1>Journal</h1><button class="tool" type="button" id="newBtn">+ New entry</button></div>
+    </div></header>
+  </div>
+
+  <main class="body">
+
+    <div class="pane on" id="pane-list-body">
+      <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="search" id="q" placeholder="Search notes, $0700.HK, #lesson" aria-label="Search entries" /></div>
+
+      <div class="week" id="week" aria-label="This week"></div>
+
+      <p class="sumline"><span><b>13</b> entries in Oct</span><span><b>5</b> lessons</span><span><b>9</b> names mentioned</span><span><b>6-day</b> streak</span></p>
+
+      <div class="seg" role="tablist" id="listSeg">
+        <button class="on" role="tab" data-list="entries">Entries</button>
+        <button role="tab" data-list="month">Month</button>
+        <button role="tab" data-list="lessons">Lessons<small>5</small></button>
+      </div>
+
+      <div class="entries" id="entries"></div>
+
+      <div class="card" id="monthView" hidden style="padding:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><b style="font-size:15px">October 2026</b><span style="font-size:12.5px;color:var(--faint)">13 entries · 8 bullish · 3 bearish</span></div>
+        <div class="month" id="month"></div>
+        <p class="note" style="margin:10px 0 0">Dot colour is your market view that day. Tap a day to open or start its entry.</p>
+      </div>
+
+      <div class="entries" id="lessonsView" hidden></div>
+
+      <p class="foot">One entry per day. Drafts save as you type. The AI never changes an entry until you tap Use suggestion.</p>
+    </div>
+
+    <!-- ================= EDITOR PANE ================= -->
+    <div class="pane" id="pane-editor">
+      <header class="ed-top">
+        <div class="row">
+          <button class="back" type="button" id="backBtn"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>Journal</button>
+          <div class="ttl"><b>Tue 13 Oct 2026</b><span id="saveState">Saved 16:42 · 412 words</span></div>
+          <button class="more" type="button" id="moreBtn" aria-label="More"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/></svg></button>
+        </div>
+      </header>
+
+      <div class="meta-wrap">
+        <input class="title-in" id="titleIn" value="Evening review: weak HK open, NKE into results" placeholder="Title (optional)" aria-label="Title" />
+        <div class="meta">
+          <div class="r"><span class="lbl">View</span>
+            <div class="seg" id="viewSeg"><button class="b" data-v="bull">Bullish</button><button class="on" data-v="neut">Neutral</button><button class="r" data-v="bear">Bearish</button></div>
+          </div>
+          <div class="r"><span class="lbl">Tags</span><input class="ti" id="tagsIn" value="#roll-rule #hk" aria-label="Tags" /></div>
+          <div class="r"><span class="lbl">Names</span><div class="tk" id="names"><span class="chip tk">0700.HK</span><span class="chip tk">NKE</span><span class="chip tk">KO</span><span class="chip tk">3690.HK</span><span>found in the text, linked to Research</span></div></div>
+        </div>
+      </div>
+
+      <section class="card editor">
+        <div class="doc" id="doc" contenteditable="true" data-placeholder="What happened today, what you did, what you will do tomorrow…" spellcheck="true"></div>
+      </section>
+
+      <p class="ed-foot"><span>Last AI: <b>none yet</b></span><span>Revisions: <b>3</b></span><span>Template: <b>Evening review</b></span></p>
+      <p class="foot">Images and tables stay exactly as you put them. The AI only rewrites words.</p>
+    </div>
+
+  </main>
+
+  <!-- editor toolbar (phone: fixed above tab bar) -->
+  <div class="toolbar" id="toolbar" role="toolbar" aria-label="Formatting">
+    <button type="button" data-cmd="bold" aria-label="Bold"><b>B</b></button>
+    <button type="button" data-cmd="italic" aria-label="Italic"><i style="font-family:serif">I</i></button>
+    <button type="button" data-cmd="strikeThrough" aria-label="Strike"><s>S</s></button>
+    <button type="button" data-block="h2" aria-label="Heading">H</button>
+    <span class="sep"></span>
+    <button type="button" data-cmd="insertUnorderedList" aria-label="Bullets"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/></svg></button>
+    <button type="button" data-cmd="insertOrderedList" aria-label="Numbered"><svg viewBox="0 0 24 24"><path d="M10 6h10M10 12h10M10 18h10M4 5h1v3M4 11.5c0-.8.6-1.3 1.2-1.3.7 0 1.3.5 1.3 1.2 0 1-2.5 2-2.5 2.6h2.7M4 16.5h1.6c.6 0 1 .4 1 .9s-.4.9-1 .9h-.6h.7c.6 0 1 .4 1 .9s-.4.9-1 .9H4"/></svg></button>
+    <button type="button" data-ins="todo" aria-label="Checklist"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="7" height="7" rx="1.5"/><path d="M5 7.5l1.5 1.5L9 6M13 7h8M13 17h8"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg></button>
+    <button type="button" data-ins="quote" aria-label="Callout"><svg viewBox="0 0 24 24"><path d="M5 5h14M5 12h9M5 19h14M19 10v4"/></svg></button>
+    <span class="sep"></span>
+    <button type="button" data-ins="table" aria-label="Table"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16M15 4v16"/></svg></button>
+    <button type="button" data-ins="image" aria-label="Image"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="M21 16l-5-5-8 8"/></svg></button>
+    <button type="button" data-ins="ticker" aria-label="Stock name">$</button>
+    <button type="button" data-ins="snap" aria-label="Insert today's snapshot"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M7 15l4-5 3 3 5-7"/></svg></button>
+    <span class="sep"></span>
+    <button type="button" data-cmd="undo" aria-label="Undo"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+    <button type="button" class="aibtn" id="aiBtn"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8zM5 2l.6 1.6L7 4l-1.4.6L5 6l-.6-1.4L3 4l1.4-.4z"/></svg>AI rewrite</button>
+  </div>
+
+  <nav class="tabbar" aria-label="Main">
+    <a href="#today"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Today</span></a>
+    <a href="#journal" class="active"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg><span>Journal</span></a>
+    <a href="#research"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Research</span></a>
+    <a href="#watchlist"><svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg><span>Watch</span></a>
+    <a href="#positions"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M7 15l4-5 3 3 5-7"/></svg><span>Positions</span></a>
+    <a href="#backtests"><svg viewBox="0 0 24 24"><path d="M4 4v16h16"/><path d="M7 14l3-4 3 2 4-6"/></svg><span>Tests</span></a>
+    <a href="#data"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span>Data</span></a>
+    <a href="#settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span>Settings</span></a>
+  </nav>
+</div>
+
+<!-- ================= SHEETS ================= -->
+<div class="scrim" id="scrim"></div>
+
+<div class="sheet" id="aiSheet" role="dialog" aria-labelledby="aiTitle" aria-modal="true">
+  <div class="grab"></div>
+  <div class="sh"><h3 id="aiTitle">AI rewrite</h3><span class="chip ai" id="aiStage">Choose</span><button class="x" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+
+  <div class="sb" id="aiChoose">
+    <div class="modes" id="modes">
+      <button class="mode on" type="button" data-mode="polish"><b>Polish</b><span>Fix grammar and flow. Keep my words, my view and every number.</span></button>
+      <button class="mode" type="button" data-mode="tighten"><b>Tighten</b><span>Half the length. Drop repetition, keep decisions.</span></button>
+      <button class="mode" type="button" data-mode="structure"><b>Structure</b><span>Headings for Market, Positions, Decisions, Lessons.</span></button>
+      <button class="mode" type="button" data-mode="lessons"><b>Lessons &amp; actions</b><span>Append what I learned and tomorrow's to-dos as a checklist.</span></button>
+      <button class="mode" type="button" data-mode="zh"><b>中文</b><span>Translate to Chinese, keep tickers and numbers.</span></button>
+      <button class="mode" type="button" data-mode="custom"><b>Custom</b><span>Tell it what to do.</span></button>
+    </div>
+    <textarea class="custom" id="customIn" placeholder="Optional instruction, e.g. “write it as a letter to my future self”" rows="2"></textarea>
+    <div class="optrow"><span>Give it today's positions and scan as context</span><button class="sw" type="button" id="ctxSw" role="switch" aria-checked="false" aria-label="Include context"></button></div>
+    <p class="note">Runs through the same claude CLI as Research, with no tools and a $0.10 cap. Images, tables and stock names are locked; only prose changes. Nothing is written to the entry until you accept.</p>
+  </div>
+
+  <div class="sb" id="aiRun" hidden>
+    <div class="prog" id="prog"></div>
+    <p class="note">Usually 5 to 20 seconds on a phone. You can close this and keep writing; the suggestion waits here.</p>
+  </div>
+
+  <div class="sb" id="aiResult" hidden>
+    <div class="res-tabs"><button class="on" type="button" data-rt="sug">Suggestion</button><button type="button" data-rt="diff">Changes</button></div>
+    <div class="preview" id="sugView"><div class="doc" id="sugDoc"></div></div>
+    <div class="diff" id="diffView" hidden></div>
+    <p class="costline"><span>Mode <b id="costMode">Polish</b></span><span>Model <b>claude-haiku-5-5</b></span><span>Cost <b>$0.03</b></span><span>Took <b>9 s</b></span><span>Locked blocks kept <b>3 of 3</b></span></p>
+  </div>
+
+  <div class="sf" id="aiFootChoose"><button class="btn" type="button" data-close>Cancel</button><button class="btn ai" type="button" id="aiGo">Rewrite</button></div>
+  <div class="sf" id="aiFootRun" hidden><button class="btn" type="button" id="aiCancel">Cancel run</button></div>
+  <div class="sf" id="aiFootResult" hidden><button class="btn" type="button" data-close>Keep mine</button><button class="btn" type="button" id="aiRetry">Try again</button><button class="btn primary" type="button" id="aiAccept">Use suggestion</button></div>
+</div>
+
+<div class="sheet" id="moreSheet" role="dialog" aria-modal="true" aria-label="Entry actions">
+  <div class="grab"></div>
+  <div class="sh"><h3>Tue 13 Oct 2026</h3><button class="x" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="sb">
+    <div class="menu">
+      <button type="button" id="histBtn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>History <span style="margin-left:auto;color:var(--faint);font-size:13px">3 revisions</span></button>
+      <button type="button" id="tplBtn"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Apply a template</button>
+      <button type="button" data-toast="Markdown copied to clipboard"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Export as Markdown</button>
+      <button type="button" data-toast="Pinned to Research › NKE, 0700.HK, KO, 3690.HK"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Show on the Research page of each name</button>
+      <button type="button" class="danger" data-toast="Deleted. Undo for 10 seconds."><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>Delete entry</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="histSheet" role="dialog" aria-modal="true" aria-label="History">
+  <div class="grab"></div>
+  <div class="sh"><h3>History</h3><button class="x" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="sb">
+    <div class="hist" id="hist"></div>
+    <p class="note">Every accepted AI suggestion and every 10 minutes of typing makes a revision. Restore never deletes; it adds a new revision.</p>
+  </div>
+</div>
+
+<div class="sheet" id="tplSheet" role="dialog" aria-modal="true" aria-label="Templates">
+  <div class="grab"></div>
+  <div class="sh"><h3>Start from a template</h3><button class="x" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="sb">
+    <div class="tpls">
+      <button class="tpl" type="button" data-tpl="morning"><b>Morning plan</b><span>Overnight moves, today's scan picks with your yes/no and why, orders you intend to place, what would make you stop.</span></button>
+      <button class="tpl" type="button" data-tpl="evening"><b>Evening review</b><span>What happened, what you did and did not do, open positions snapshot, one lesson, tomorrow's checklist.</span></button>
+      <button class="tpl" type="button" data-tpl="trade"><b>Trade note</b><span>One trade: thesis, strike and expiry reasoning, exit plan, what the scan said, how you feel about it.</span></button>
+      <button class="tpl" type="button" data-tpl="weekly"><b>Weekly review</b><span>Sunday: P&amp;L by name, rule breaches, journal lessons re-read, next week's watch items.</span></button>
+    </div>
+    <p class="note">Templates insert headings and prompts into an empty entry. On an entry with text they are appended below.</p>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden><span id="toastMsg"></span><button type="button" id="toastAct" hidden>Undo</button></div>
+
+<script>
+(function () {
+  'use strict';
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+
+  // ---------------------------------------------------------------- sample data
+  const chartSvg = (color) => `<svg viewBox="0 0 320 120" role="img" aria-label="0700.HK one-day chart screenshot"><rect width="320" height="120" fill="var(--panel)"/><g stroke="var(--line)" stroke-width="1"><path d="M0 30H320M0 60H320M0 90H320"/></g><path d="M0 48 L20 62 L40 70 L60 66 L80 78 L100 74 L120 82 L140 72 L160 60 L180 64 L200 50 L220 54 L240 44 L260 48 L280 40 L300 42 L320 38" fill="none" stroke="${color}" stroke-width="2"/><path d="M0 48 L20 62 L40 70 L60 66 L80 78 L100 74 L120 82 L140 72 L160 60 L180 64 L200 50 L220 54 L240 44 L260 48 L280 40 L300 42 L320 38 V120 H0Z" fill="${color}" opacity=".12"/><text x="6" y="14" font-size="10" fill="var(--faint)" font-family="JetBrains Mono,monospace">0700.HK · 1D · 16:05</text><text x="268" y="114" font-size="10" fill="var(--faint)" font-family="JetBrains Mono,monospace">602.5</text></svg>`;
+
+  const snapshotTable = `
+<div class="snap" contenteditable="false"><div class="cap">Open positions · from the app <span>13 Oct 16:05</span></div>
+<div class="tbl"><table><thead><tr><th>Name</th><th>Put</th><th>Exp</th><th class="num">DTE</th><th class="num">Delta</th><th class="num">P&amp;L</th></tr></thead><tbody>
+<tr><td><span class="tk">NKE</span></td><td class="num">65</td><td>17 Oct</td><td class="num">4</td><td class="num">0.18</td><td class="num up">+$210</td></tr>
+<tr><td><span class="tk">KO</span></td><td class="num">60</td><td>21 Nov</td><td class="num">39</td><td class="num">0.22</td><td class="num up">+$95</td></tr>
+<tr><td><span class="tk">0700.HK</span></td><td class="num">560</td><td>29 Oct</td><td class="num">16</td><td class="num">0.15</td><td class="num up">+HK$1,120</td></tr>
+</tbody></table></div></div>`;
+
+  const draftHtml = `
+<h2>Market</h2>
+<p>HK open weak again, HSI -1.2% at open then recover by close. <span class="tk">0700.HK</span> still holding 600 area, I think the 560 put nov is ok but IV lower than last week so premium not great. didnt sell.</p>
+<figure contenteditable="false">${chartSvg('var(--brand-dark)')}<figcaption>Tencent held 600 into the close. Screenshot 16:05.</figcaption></figure>
+<p>US: <span class="tk">NKE</span> results after close, I have the 65 put open exp 17 Oct, 4 days left, delta now 0.18. if it drops below 68 tomorrow I will roll to Nov 62.5 rather than take assignment, because earnings risk not what I signed up for.</p>
+${snapshotTable}
+<h2>Scan</h2>
+<p>Scan said 2 names ready: <span class="tk">KO</span> 62.5 Nov, <span class="tk">3690.HK</span> 100 Nov. Skipped 3690, results before expiry (S1 warn) and i dont want meituan at 100 anyway. KO i already have the 60, so no.</p>
+<blockquote><p>Lesson: stop checking price every 10 min. the roll rule is below strike + 5%, not "feels heavy".</p></blockquote>
+<h2>Tomorrow</h2>
+<ul class="todo"><li><input type="checkbox" aria-label="done" /><span>NKE pre-market: roll to Nov 62.5 if under 68</span></li><li><input type="checkbox" aria-label="done" /><span>Re-check 0700 IV; sell the Nov 560 only if premium &gt; 1.2%</span></li><li class="done"><input type="checkbox" checked aria-label="done" /><span>Update KO note on Research</span></li></ul>`;
+
+  // Rewritten prose per mode. Locked blocks (figure, snapshot, checklist) are re-inserted unchanged.
+  const rewrites = {
+    polish: {
+      text: `<h2>Market</h2>
+<p>Hong Kong opened weak again: the HSI fell 1.2% at the open and recovered by the close. <span class="tk">0700.HK</span> is still holding the 600 area. The November 560 put looks fine, but implied volatility is lower than last week and the premium is not attractive, so I did not sell.</p>
+[[FIG]]
+<p>US: <span class="tk">NKE</span> reports after the close. I hold the 65 put expiring 17 October, 4 days out, delta now 0.18. If the stock drops below 68 tomorrow I will roll to the November 62.5 rather than take assignment, because earnings risk is not what I signed up for.</p>
+[[SNAP]]
+<h2>Scan</h2>
+<p>The scan flagged two names as ready: <span class="tk">KO</span> 62.5 November and <span class="tk">3690.HK</span> 100 November. I skipped 3690 because results land before expiry (S1 warning) and I do not want Meituan at 100 anyway. I already hold the KO 60, so no second position there.</p>
+<blockquote><p>Lesson: stop checking the price every 10 minutes. The roll rule is "below strike plus 5%", not "feels heavy".</p></blockquote>
+<h2>Tomorrow</h2>
+[[TODO]]`,
+      plain: `Market\nHong Kong opened weak again: the HSI fell 1.2% at the open and recovered by the close. 0700.HK is still holding the 600 area. The November 560 put looks fine, but implied volatility is lower than last week and the premium is not attractive, so I did not sell.\nUS: NKE reports after the close. I hold the 65 put expiring 17 October, 4 days out, delta now 0.18. If the stock drops below 68 tomorrow I will roll to the November 62.5 rather than take assignment, because earnings risk is not what I signed up for.\nScan\nThe scan flagged two names as ready: KO 62.5 November and 3690.HK 100 November. I skipped 3690 because results land before expiry (S1 warning) and I do not want Meituan at 100 anyway. I already hold the KO 60, so no second position there.\nLesson: stop checking the price every 10 minutes. The roll rule is "below strike plus 5%", not "feels heavy".\nTomorrow`
+    },
+    tighten: {
+      text: `<h2>Market</h2>
+<p>HSI -1.2% at the open, recovered by the close. <span class="tk">0700.HK</span> holds 600. Nov 560 put is fine but IV is lower than last week; no sale.</p>
+[[FIG]]
+<p><span class="tk">NKE</span> reports tonight; 65 put, 17 Oct, delta 0.18. Below 68 tomorrow: roll to Nov 62.5, no assignment through earnings.</p>
+[[SNAP]]
+<h2>Scan</h2>
+<p>Ready: <span class="tk">KO</span> 62.5 Nov (already hold the 60, skip), <span class="tk">3690.HK</span> 100 Nov (results before expiry, skip).</p>
+<blockquote><p>Lesson: roll rule is below strike + 5%. Stop watching the tape.</p></blockquote>
+<h2>Tomorrow</h2>
+[[TODO]]`,
+      plain: `Market\nHSI -1.2% at the open, recovered by the close. 0700.HK holds 600. Nov 560 put is fine but IV is lower than last week; no sale.\nNKE reports tonight; 65 put, 17 Oct, delta 0.18. Below 68 tomorrow: roll to Nov 62.5, no assignment through earnings.\nScan\nReady: KO 62.5 Nov (already hold the 60, skip), 3690.HK 100 Nov (results before expiry, skip).\nLesson: roll rule is below strike + 5%. Stop watching the tape.\nTomorrow`
+    },
+    structure: {
+      text: `<h2>Market</h2>
+<ul><li>HSI -1.2% at the open, recovered by the close.</li><li><span class="tk">0700.HK</span> holding 600; Nov 560 put acceptable but IV below last week, premium thin.</li></ul>
+[[FIG]]
+<h2>Positions</h2>
+<ul><li><span class="tk">NKE</span> 65 put, 17 Oct (4 DTE, delta 0.18). Results after the close tonight.</li></ul>
+[[SNAP]]
+<h2>Decisions</h2>
+<ul><li>Did not sell the 0700 Nov 560: premium too low.</li><li>Skipped <span class="tk">3690.HK</span> 100 Nov: results before expiry (S1 warning), and I do not want Meituan at 100.</li><li>Skipped <span class="tk">KO</span> 62.5 Nov: already hold the 60.</li><li>Plan for NKE: below 68 tomorrow, roll to Nov 62.5 rather than take assignment.</li></ul>
+<h2>Lessons</h2>
+<blockquote><p>Stop checking the price every 10 minutes. The roll rule is "below strike plus 5%", not "feels heavy".</p></blockquote>
+<h2>Tomorrow</h2>
+[[TODO]]`,
+      plain: `Market\nHSI -1.2% at the open, recovered by the close.\n0700.HK holding 600; Nov 560 put acceptable but IV below last week, premium thin.\nPositions\nNKE 65 put, 17 Oct (4 DTE, delta 0.18). Results after the close tonight.\nDecisions\nDid not sell the 0700 Nov 560: premium too low.\nSkipped 3690.HK 100 Nov: results before expiry (S1 warning), and I do not want Meituan at 100.\nSkipped KO 62.5 Nov: already hold the 60.\nPlan for NKE: below 68 tomorrow, roll to Nov 62.5 rather than take assignment.\nLessons\nStop checking the price every 10 minutes. The roll rule is "below strike plus 5%", not "feels heavy".\nTomorrow`
+    },
+    lessons: {
+      text: null, // appended, built at run time
+      plain: null
+    },
+    zh: {
+      text: `<h2>市场</h2>
+<p>港股再度低开，恒指开盘跌 1.2%，收盘收复。<span class="tk">0700.HK</span> 仍守住 600 一线。11 月 560 认沽可以接受，但隐含波动率低于上周，权利金不吸引，所以没有卖出。</p>
+[[FIG]]
+<p>美股：<span class="tk">NKE</span> 盘后公布业绩。我持有 10 月 17 日到期的 65 认沽，剩 4 天，Delta 0.18。如果明天跌破 68，我会展期到 11 月 62.5，而不是接受行权，因为业绩风险不是我当初要的。</p>
+[[SNAP]]
+<h2>扫描</h2>
+<p>扫描给出两个可做的名字：<span class="tk">KO</span> 62.5 十一月，<span class="tk">3690.HK</span> 100 十一月。跳过 3690，因为业绩在到期前公布（S1 警告），而且我本来就不想在 100 接美团。KO 我已持有 60，不再加。</p>
+<blockquote><p>教训：不要每 10 分钟看一次价格。展期规则是“跌破行权价加 5%”，不是“感觉很重”。</p></blockquote>
+<h2>明天</h2>
+[[TODO]]`,
+      plain: `市场\n港股再度低开，恒指开盘跌 1.2%，收盘收复。0700.HK 仍守住 600 一线。11 月 560 认沽可以接受，但隐含波动率低于上周，权利金不吸引，所以没有卖出。\n美股：NKE 盘后公布业绩。我持有 10 月 17 日到期的 65 认沽，剩 4 天，Delta 0.18。如果明天跌破 68，我会展期到 11 月 62.5，而不是接受行权，因为业绩风险不是我当初要的。\n扫描\n扫描给出两个可做的名字：KO 62.5 十一月，3690.HK 100 十一月。跳过 3690，因为业绩在到期前公布（S1 警告），而且我本来就不想在 100 接美团。KO 我已持有 60，不再加。\n教训：不要每 10 分钟看一次价格。展期规则是“跌破行权价加 5%”，不是“感觉很重”。\n明天`
+    }
+  };
+  const lessonsBlock = `<h2>Lessons &amp; actions (AI draft)</h2>
+<ul><li><b>Rules beat feelings.</b> Twice today the decision came from a written rule (roll below strike + 5%; no new put into results) and both felt right afterwards.</li><li><b>Premium has a floor.</b> You passed on 0700 at low IV. Write the floor down: 1.2% of strike for a 20 to 45 day put.</li><li><b>Watching the tape adds nothing</b> when the plan already names the trigger price.</li></ul>
+<ul class="todo"><li><input type="checkbox" aria-label="done" /><span>Add "premium floor 1.2%" to the S4 notes on Settings</span></li><li><input type="checkbox" aria-label="done" /><span>Set a price alert at NKE 68 instead of checking manually</span></li></ul>`;
+
+  const entries = [
+    { d: '13', dow: 'Tue', date: 'Tue 13 Oct', tpl: 'Evening review', title: 'Evening review: weak HK open, NKE into results', ex: 'HK open weak again, HSI -1.2% at open then recover by close. 0700 still holding 600 area, I think the 560 put nov is ok but IV lower…', view: 'neut', names: ['0700.HK', 'NKE', 'KO', '3690.HK'], tags: ['#roll-rule'], words: 412, img: true, draft: true, when: '16:42', ai: false },
+    { d: '12', dow: 'Mon', date: 'Mon 12 Oct', tpl: 'Morning plan', title: 'Two HK names on the list, taking neither', ex: 'Scan after the weekend: 3690 and 9988 ready. 9988 Nov 150 looks fine on delta but the 20 Nov results sit inside the window…', view: 'bear', names: ['3690.HK', '9988.HK'], tags: ['#hk', '#earnings'], words: 230, img: false, when: '08:51', ai: true },
+    { d: '10', dow: 'Sat', date: 'Sat 10 Oct', tpl: 'Weekly review', title: 'Week 41: +$640, one rule breach', ex: 'Four expiries, all worthless. The breach: sold the KO 60 one day after a WARN because the premium was good. Not again…', view: 'bull', names: ['KO', 'NKE', 'MSFT'], tags: ['#weekly', '#breach'], words: 688, img: true, when: '10:12', ai: true },
+    { d: '9', dow: 'Fri', date: 'Fri 9 Oct', tpl: 'Trade note', title: 'Sold NKE Nov 65 put, 0.21 delta', ex: 'Filled at 1.48 against a 1.52 mid. Thesis: inventory clean-up done, guidance already cut, 65 is below the August low…', view: 'bull', names: ['NKE'], tags: ['#trade'], words: 310, img: false, when: '22:30', ai: false },
+    { d: '8', dow: 'Thu', date: 'Thu 8 Oct', tpl: 'Evening review', title: 'Quiet day, nothing done', ex: 'No scan picks. Watched 0700 drift. Read the Q2 Meituan call again: subsidies are the whole story…', view: 'neut', names: ['0700.HK', '3690.HK'], tags: [], words: 140, img: false, when: '19:04', ai: false },
+    { d: '7', dow: 'Wed', date: 'Wed 7 Oct', tpl: 'Morning plan', title: 'Pre-market: MSFT 480 assignment risk', ex: 'MSFT closed 483 with the 480 put at 0.44 delta. Rule says roll at strike + 5% breach, which was yesterday…', view: 'bear', names: ['MSFT'], tags: ['#assignment', '#breach'], words: 275, img: true, when: '08:20', ai: true },
+  ];
+  const lessons = [
+    { q: 'The roll rule is "below strike + 5%", not "feels heavy". Stop checking price every 10 minutes.', src: 'Tue 13 Oct', names: ['NKE'] },
+    { q: 'Never sell into a WARN because the premium is good. The premium is good because of the WARN.', src: 'Sat 10 Oct', names: ['KO'] },
+    { q: 'If results sit inside the expiry window, the trade is a results bet, whatever the delta says.', src: 'Mon 12 Oct', names: ['9988.HK'] },
+    { q: 'Write the premium floor down (1.2% of strike, 20 to 45 days) so "not great" has a number.', src: 'Tue 13 Oct', names: ['0700.HK'] },
+    { q: 'A roll one day late cost more than the roll itself. The rule has a date, not just a price.', src: 'Wed 7 Oct', names: ['MSFT'] },
+  ];
+  const revisions = [
+    { t: '16:42', who: 'You', what: 'Typed 412 words', cur: true },
+    { t: '16:05', who: 'You', what: 'Inserted positions snapshot and 0700 screenshot' },
+    { t: '09:12', who: 'You', what: 'Started from Evening review template' },
+  ];
+
+  // ---------------------------------------------------------------- list pane
+  const week = $('#week');
+  const days = [{ n: 'Mon', d: 12, has: true }, { n: 'Tue', d: 13, has: true, today: true, sel: true }, { n: 'Wed', d: 14 }, { n: 'Thu', d: 15 }, { n: 'Fri', d: 16 }, { n: 'Sat', d: 17, wknd: true }, { n: 'Sun', d: 18, wknd: true }];
+  week.innerHTML = days.map((x) => `<button type="button" class="${x.has ? 'has ' : ''}${x.today ? 'today ' : ''}${x.sel ? 'sel ' : ''}${x.wknd ? 'wknd' : ''}" aria-label="${x.n} ${x.d} Oct"><span>${x.n}</span><b>${x.d}</b><i></i></button>`).join('');
+
+  const entriesEl = $('#entries');
+  function renderEntries(filter) {
+    const f = (filter || '').trim().toLowerCase();
+    const list = entries.filter((e) => !f || (e.title + ' ' + e.ex + ' ' + e.names.join(' ') + ' ' + e.tags.join(' ')).toLowerCase().includes(f.replace(/^\$/, '')));
+    entriesEl.innerHTML = list.length ? list.map((e) => `
+      <button type="button" class="card ent ${e.view} ${e.draft ? 'draft' : ''}" data-open="${e.d}">
+        <div class="hd"><span class="d">${e.date}</span><span class="chip">${e.tpl}</span>${e.draft ? '<span class="chip warn">Draft</span>' : ''}${e.ai ? '<span class="chip ai">AI polished</span>' : ''}<span class="when">${e.when}</span></div>
+        <div class="${e.img ? 'thumb' : ''}"><div><h3>${e.title}</h3><p class="ex" style="margin:4px 0 0">${e.ex}</p></div>${e.img ? chartSvg(e.view === 'bear' ? 'var(--fail)' : 'var(--brand-dark)') : ''}</div>
+        <div class="with">${e.names.map((n) => `<span class="chip tk">${n}</span>`).join('')}${e.tags.map((t) => `<span class="chip">${t}</span>`).join('')}<span class="n">${e.words} words</span></div>
+      </button>`).join('') : '<p class="empty" style="text-align:center;color:var(--faint);padding:28px 0">No entry matches. Try a name like $NKE or a tag like #breach.</p>';
+  }
+  renderEntries('');
+  $('#q').addEventListener('input', (ev) => renderEntries(ev.target.value));
+
+  const month = $('#month');
+  const dows = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  const views = { 1: 'b', 2: 'b', 5: 'n', 6: 'b', 7: 'r', 8: 'n', 9: 'b', 10: 'b', 12: 'r', 13: 'n', 2.5: 'b' };
+  const has = new Set([1, 2, 5, 6, 7, 8, 9, 10, 12, 13, 14]);
+  let cells = dows.map((d) => `<span class="dow">${d}</span>`).join('');
+  for (let i = 0; i < 3; i++) cells += `<button type="button" class="pad" tabindex="-1">${28 + i}</button>`; // Oct 2026 starts on Thursday
+  for (let d = 1; d <= 31; d++) {
+    const h = has.has(d) && d !== 14;
+    cells += `<button type="button" class="${h ? 'has ' : ''}${d === 13 ? 'today' : ''}" aria-label="${d} October">${d}<i>${h ? `<s class="${views[d] || 'n'}"></s>` : ''}</i></button>`;
+  }
+  month.innerHTML = cells;
+
+  $('#lessonsView').innerHTML = lessons.map((l) => `<div class="card lesson"><p class="q" style="margin:0">${l.q}</p><div class="src"><span>${l.src}</span>${l.names.map((n) => `<span class="chip tk">${n}</span>`).join('')}<span style="margin-left:auto" class="chip ai">AI extracted</span></div></div>`).join('') + '<p class="note">Lessons are pulled by the "Lessons &amp; actions" rewrite and from any paragraph that starts with "Lesson:". Tap one to open the entry.</p>';
+
+  $$('#listSeg button').forEach((b) => b.addEventListener('click', () => {
+    $$('#listSeg button').forEach((x) => x.classList.toggle('on', x === b));
+    const v = b.dataset.list;
+    entriesEl.hidden = v !== 'entries';
+    $('#monthView').hidden = v !== 'month';
+    $('#lessonsView').hidden = v !== 'lessons';
+  }));
+
+  // ---------------------------------------------------------------- panes
+  const doc = $('#doc');
+  const toolbar = $('#toolbar');
+  const isDesktop = () => window.matchMedia('(min-width: 900px)').matches;
+  function showEditor(on) {
+    $('#pane-editor').classList.toggle('on', on || isDesktop());
+    $('#pane-list').classList.toggle('on', !on || isDesktop());
+    $('#pane-list-body').classList.toggle('on', !on || isDesktop());
+    toolbar.classList.toggle('on', on || isDesktop());
+    if (on) window.scrollTo(0, 0);
+  }
+  doc.innerHTML = draftHtml;
+  showEditor(false);
+  // The editor is a history entry, so the phone's swipe-back (and the browser Back button) returns to the list.
+  function openEntry() { if (!isDesktop() && !(history.state && history.state.entry)) history.pushState({ entry: '2026-10-13' }, '', '#entry'); showEditor(true); }
+  function goBack() { if (history.state && history.state.entry) history.back(); else showEditor(false); }
+  window.addEventListener('popstate', () => showEditor(!!(history.state && history.state.entry)));
+  window.addEventListener('resize', () => showEditor($('#pane-editor').classList.contains('on') && !isDesktop() ? true : false));
+  entriesEl.addEventListener('click', (ev) => { const b = ev.target.closest('[data-open]'); if (b) openEntry(); });
+  $('#newBtn').addEventListener('click', () => { openEntry(); toast('Today already has an entry. Opened it.'); });
+  $('#backBtn').addEventListener('click', goBack);
+  week.addEventListener('click', (ev) => { const b = ev.target.closest('button'); if (!b) return; $$('#week button').forEach((x) => x.classList.toggle('sel', x === b)); if (b.classList.contains('has')) openEntry(); else toast(`No entry on ${b.getAttribute('aria-label')}. Tap + New entry to start one.`); });
+  month.addEventListener('click', (ev) => { const b = ev.target.closest('button:not(.pad)'); if (b) { if (b.classList.contains('has')) openEntry(); else toast(`No entry on ${b.getAttribute('aria-label')}.`); } });
+  $('#lessonsView').addEventListener('click', (ev) => { if (ev.target.closest('.lesson')) openEntry(); });
+
+  // Keyboard: iOS keeps position:fixed elements behind the keyboard. The visual viewport says where the keyboard
+  // starts, so the toolbar is pinned to that edge while the document has focus and the tab bar gets out of the way.
+  const vv = window.visualViewport;
+  function placeToolbar() {
+    if (isDesktop()) { document.body.classList.remove('kb'); toolbar.style.top = ''; return; }
+    const editing = doc.contains(document.activeElement);
+    const kbHeight = vv ? window.innerHeight - vv.height - vv.offsetTop : 0;
+    const kb = editing && kbHeight > 60;
+    document.body.classList.toggle('kb', kb);
+    if (kb) { toolbar.style.top = `${vv.offsetTop + vv.height - toolbar.offsetHeight}px`; toolbar.style.bottom = 'auto'; }
+    else { toolbar.style.top = ''; toolbar.style.bottom = ''; }
+  }
+  if (vv) { vv.addEventListener('resize', placeToolbar); vv.addEventListener('scroll', placeToolbar); }
+  doc.addEventListener('focus', placeToolbar);
+  doc.addEventListener('blur', () => setTimeout(placeToolbar, 80));
+
+  // autosave indicator
+  let saveT = null;
+  const saveState = $('#saveState');
+  function markDirty() {
+    saveState.textContent = 'Saving…'; saveState.classList.add('saving');
+    clearTimeout(saveT);
+    saveT = setTimeout(() => {
+      const words = doc.innerText.trim().split(/\s+/).filter(Boolean).length;
+      const t = new Date();
+      saveState.textContent = `Saved ${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')} · ${words} words`;
+      saveState.classList.remove('saving');
+    }, 1200);
+  }
+  doc.addEventListener('input', markDirty);
+  $('#titleIn').addEventListener('input', markDirty);
+  $('#tagsIn').addEventListener('input', markDirty);
+  doc.addEventListener('change', (ev) => { if (ev.target.type === 'checkbox') { ev.target.closest('li').classList.toggle('done', ev.target.checked); markDirty(); } });
+  // Tapping the text of a checklist row toggles it too (the whole 44 px row is the target, not the 22 px box).
+  doc.addEventListener('click', (ev) => { const li = ev.target.closest('ul.todo li'); if (!li || ev.target.type === 'checkbox' || ev.detail === 0) return; const cb = li.querySelector('input[type=checkbox]'); if (cb && !ev.target.isContentEditable) { cb.checked = !cb.checked; cb.dispatchEvent(new Event('change', { bubbles: true })); } });
+  $$('#viewSeg button').forEach((b) => b.addEventListener('click', () => { $$('#viewSeg button').forEach((x) => x.classList.toggle('on', x === b)); markDirty(); }));
+
+  // ---------------------------------------------------------------- toolbar
+  function insertHtml(html) {
+    doc.focus();
+    document.execCommand('insertHTML', false, html);
+    markDirty();
+  }
+  toolbar.addEventListener('mousedown', (ev) => { if (ev.target.closest('button')) ev.preventDefault(); }); // keep the selection
+  toolbar.addEventListener('click', (ev) => {
+    const b = ev.target.closest('button'); if (!b) return;
+    if (b.dataset.cmd) { doc.focus(); document.execCommand(b.dataset.cmd, false, null); markDirty(); return; }
+    if (b.dataset.block) { doc.focus(); document.execCommand('formatBlock', false, b.dataset.block); markDirty(); return; }
+    switch (b.dataset.ins) {
+      case 'todo': insertHtml('<ul class="todo"><li><input type="checkbox" aria-label="done" /><span>To do</span></li></ul><p><br></p>'); break;
+      case 'quote': insertHtml('<blockquote><p>Lesson: </p></blockquote><p><br></p>'); break;
+      case 'table': insertHtml('<div class="tbl"><table><thead><tr><th>Name</th><th class="num">Strike</th><th>Exp</th><th class="num">Premium</th></tr></thead><tbody><tr><td>…</td><td class="num"></td><td></td><td class="num"></td></tr><tr><td>…</td><td class="num"></td><td></td><td class="num"></td></tr></tbody></table></div><p><br></p>'); break;
+      case 'image': pickImage(); break;
+      case 'ticker': insertHtml('<span class="tk">$</span>&nbsp;'); toast('Type a symbol: 0700.HK or NKE. It links to Research.'); break;
+      case 'snap': insertHtml(snapshotTable + '<p><br></p>'); toast('Snapshot inserted. It is a copy; the entry keeps today\'s numbers.'); break;
+    }
+  });
+  function pickImage() {
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+    inp.addEventListener('change', () => {
+      const f = inp.files && inp.files[0]; if (!f) { return; }
+      if (f.size > 8 * 1024 * 1024) { toast('Image over 8 MB. The app resizes on upload; the prototype does not.'); return; }
+      const r = new FileReader();
+      r.onload = () => insertHtml(`<figure contenteditable="false"><img src="${r.result}" alt="" /><figcaption>${f.name}</figcaption></figure><p><br></p>`);
+      r.readAsDataURL(f);
+    });
+    inp.click();
+  }
+  doc.addEventListener('paste', (ev) => {
+    const items = ev.clipboardData && ev.clipboardData.items; if (!items) return;
+    for (const it of items) if (it.type.startsWith('image/')) {
+      ev.preventDefault();
+      const f = it.getAsFile(); const r = new FileReader();
+      r.onload = () => insertHtml(`<figure contenteditable="false"><img src="${r.result}" alt="" /><figcaption>Pasted screenshot</figcaption></figure><p><br></p>`);
+      r.readAsDataURL(f); return;
+    }
+  });
+
+  // ---------------------------------------------------------------- sheets
+  const scrim = $('#scrim');
+  let openSheet = null;
+  function open(id) { close(); openSheet = $(id); openSheet.classList.add('on'); scrim.classList.add('on'); document.body.style.overflow = 'hidden'; const f = openSheet.querySelector('button,textarea,input'); if (f) f.focus(); }
+  function close() { if (openSheet) openSheet.classList.remove('on'); openSheet = null; scrim.classList.remove('on'); document.body.style.overflow = ''; }
+  scrim.addEventListener('click', close);
+  document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') close(); });
+  $$('[data-close]').forEach((b) => b.addEventListener('click', close));
+  $('#moreBtn').addEventListener('click', () => open('#moreSheet'));
+  $('#histBtn').addEventListener('click', () => { renderHist(); open('#histSheet'); });
+  $('#tplBtn').addEventListener('click', () => open('#tplSheet'));
+  $$('[data-toast]').forEach((b) => b.addEventListener('click', () => { close(); toast(b.dataset.toast); }));
+  $$('.tpl').forEach((b) => b.addEventListener('click', () => {
+    close();
+    const tpl = { morning: '<h2>Overnight</h2><p></p><h2>Scan picks: yes / no and why</h2><ul><li></li></ul><h2>Orders I intend to place</h2><ul><li></li></ul><h2>What would make me stop</h2><p></p>', evening: '<h2>What happened</h2><p></p><h2>What I did, what I skipped</h2><p></p><h2>Lesson</h2><blockquote><p>Lesson: </p></blockquote><h2>Tomorrow</h2><ul class="todo"><li><input type="checkbox" aria-label="done" /><span></span></li></ul>', trade: '<h2>Thesis</h2><p></p><h2>Strike and expiry</h2><p></p><h2>Exit plan</h2><ul><li>Take profit at</li><li>Roll at</li><li>Stop at</li></ul><h2>What the scan said</h2><p></p>', weekly: '<h2>P&amp;L by name</h2><p></p><h2>Rule breaches</h2><ul><li></li></ul><h2>Lessons re-read</h2><p></p><h2>Next week</h2><ul class="todo"><li><input type="checkbox" aria-label="done" /><span></span></li></ul>' }[b.dataset.tpl];
+    doc.innerHTML += tpl; markDirty(); toast('Template appended below your text.');
+  }));
+
+  function renderHist() {
+    $('#hist').innerHTML = revisions.map((r, i) => `<div class="h"><span class="t">${r.t}</span><div class="w"><span>${r.what}</span><small>${r.who}</small></div>${r.cur ? '<span class="cur">Current</span>' : `<button class="btn sm" type="button" data-restore="${i}">Restore</button>`}</div>`).join('');
+    $$('[data-restore]').forEach((b) => b.addEventListener('click', () => { close(); toast('Restored as a new revision. Nothing was deleted.'); }));
+  }
+
+  // ---------------------------------------------------------------- toast
+  let toastT = null;
+  function toast(msg, undo) {
+    const t = $('#toast'); $('#toastMsg').textContent = msg; const a = $('#toastAct'); a.hidden = !undo; a.onclick = undo || null;
+    t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, undo ? 8000 : 3200);
+  }
+
+  // ---------------------------------------------------------------- AI rewrite
+  let mode = 'polish';
+  const modeLabel = { polish: 'Polish', tighten: 'Tighten', structure: 'Structure', lessons: 'Lessons & actions', zh: '中文', custom: 'Custom' };
+  $$('#modes .mode').forEach((b) => b.addEventListener('click', () => { $$('#modes .mode').forEach((x) => x.classList.toggle('on', x === b)); mode = b.dataset.mode; if (mode === 'custom') $('#customIn').focus(); }));
+  $('#ctxSw').addEventListener('click', (ev) => { const on = !ev.currentTarget.classList.contains('on'); ev.currentTarget.classList.toggle('on', on); ev.currentTarget.setAttribute('aria-checked', String(on)); });
+
+  function aiStage(s) {
+    $('#aiChoose').hidden = s !== 'choose'; $('#aiRun').hidden = s !== 'run'; $('#aiResult').hidden = s !== 'result';
+    $('#aiFootChoose').hidden = s !== 'choose'; $('#aiFootRun').hidden = s !== 'run'; $('#aiFootResult').hidden = s !== 'result';
+    $('#aiStage').textContent = { choose: 'Choose', run: 'Running', result: 'Suggestion' }[s];
+  }
+  $('#aiBtn').addEventListener('click', () => { aiStage('choose'); open('#aiSheet'); });
+
+  let runT = [];
+  function stopRun() { runT.forEach(clearTimeout); runT = []; }
+  $('#aiCancel').addEventListener('click', () => { stopRun(); aiStage('choose'); toast('Run cancelled. Nothing changed.'); });
+  $('#aiRetry').addEventListener('click', () => aiStage('choose'));
+
+  // Locked blocks: figures, snapshots, checklists are cut out before the model sees the text and pasted back by placeholder.
+  function lockedBlocks() {
+    const fig = doc.querySelector('figure'); const snap = doc.querySelector('.snap'); const todo = doc.querySelector('ul.todo');
+    return { FIG: fig ? fig.outerHTML : '', SNAP: snap ? snap.outerHTML : '', TODO: todo ? todo.outerHTML : '' };
+  }
+  function buildSuggestion(m) {
+    const locked = lockedBlocks();
+    if (m === 'lessons') return { html: doc.innerHTML + lessonsBlock, plain: doc.innerText + '\n' + lessonsBlock.replace(/<[^>]+>/g, ' ') };
+    const r = rewrites[m] || rewrites.polish;
+    return { html: r.text.replace(/\[\[(FIG|SNAP|TODO)\]\]/g, (_, k) => locked[k]), plain: r.plain };
+  }
+  function proseOnly() {
+    // The text the model sees: prose without locked blocks.
+    const c = doc.cloneNode(true); $$('figure,.snap,ul.todo', c).forEach((n) => n.remove());
+    return c.innerText.replace(/\n{2,}/g, '\n').trim();
+  }
+  let suggestion = null;
+  $('#aiGo').addEventListener('click', () => {
+    const m = mode === 'custom' && !$('#customIn').value.trim() ? 'polish' : mode;
+    const useMode = m === 'custom' ? 'polish' : m;
+    aiStage('run');
+    const words = proseOnly().split(/\s+/).length;
+    const lines = [`prose: ${words} words, 3 locked blocks (image, snapshot, checklist)`, `mode: ${modeLabel[mode]}${$('#customIn').value.trim() ? ' · "' + $('#customIn').value.trim().slice(0, 60) + '"' : ''}`, `context: ${$('#ctxSw').classList.contains('on') ? 'today\'s 3 positions, scan 16:32' : 'none'}`, 'claude -p · no tools · cap $0.10 · model claude-haiku-5-5', 'writing…'];
+    const prog = $('#prog'); prog.innerHTML = '';
+    stopRun();
+    lines.forEach((l, i) => runT.push(setTimeout(() => { prog.innerHTML += `<div class="l">${i === lines.length - 1 ? '<i></i>' : '<span style="color:var(--ok)">✓</span>'}<span>${l}</span></div>`; }, 350 * i)));
+    runT.push(setTimeout(() => {
+      suggestion = buildSuggestion(useMode);
+      $('#sugDoc').innerHTML = suggestion.html;
+      $('#diffView').innerHTML = useMode === 'lessons' ? `<span class="kept">Your text is unchanged; the block below is appended.</span><ins>${lessonsBlock.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()}</ins>` : wordDiff(proseOnly(), suggestion.plain);
+      $('#costMode').textContent = modeLabel[mode];
+      aiStage('result');
+    }, 350 * lines.length + 900));
+  });
+  $$('.res-tabs button').forEach((b) => b.addEventListener('click', () => { $$('.res-tabs button').forEach((x) => x.classList.toggle('on', x === b)); $('#sugView').hidden = b.dataset.rt !== 'sug'; $('#diffView').hidden = b.dataset.rt !== 'diff'; }));
+  $('#aiAccept').addEventListener('click', () => {
+    const before = doc.innerHTML;
+    doc.innerHTML = suggestion.html; markDirty(); close();
+    revisions.unshift({ t: nowHM(), who: 'AI · ' + modeLabel[mode] + ' (accepted)', what: 'Rewrite accepted', cur: true }); revisions[1].cur = false;
+    $('.ed-foot span b').textContent = modeLabel[mode] + ' at ' + nowHM();
+    $$('.ed-foot span b')[1].textContent = String(revisions.length);
+    toast('Replaced. Your version is in History.', () => { doc.innerHTML = before; revisions.shift(); revisions[0].cur = true; markDirty(); toast('Undone.'); });
+  });
+  function nowHM() { const t = new Date(); return `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`; }
+
+  // word-level diff (LCS) for the Changes tab
+  function wordDiff(a, b) {
+    const A = a.split(/(\s+)/).filter((x) => x.length), B = b.split(/(\s+)/).filter((x) => x.length);
+    const n = A.length, m = B.length; const L = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
+    for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i][j] = A[i] === B[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+    const out = []; let i = 0, j = 0, del = [], ins = [];
+    const flush = () => { if (del.length) out.push(`<del>${esc(del.join(''))}</del>`); if (ins.length) out.push(`<ins>${esc(ins.join(''))}</ins>`); del = []; ins = []; };
+    while (i < n && j < m) {
+      if (A[i] === B[j]) { flush(); out.push(esc(A[i])); i++; j++; }
+      else if (L[i + 1][j] >= L[i][j + 1]) { del.push(A[i++]); }
+      else { ins.push(B[j++]); }
+    }
+    while (i < n) del.push(A[i++]); while (j < m) ins.push(B[j++]); flush();
+    return out.join('').replace(/\n/g, '<br>') + '<span class="kept">Image, positions snapshot and checklist: kept as written (locked).</span>';
+  }
+  function esc(s) { return s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
+})();
+</script>
+</body>
+</html>

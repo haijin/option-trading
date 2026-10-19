@@ -1,0 +1,535 @@
+/* ---------- Layout A "Blotter": icon rail, top bar, master/detail panes; phone: tab bar, one pane at a time ---------- */
+.app {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  height: 100vh;
+}
+@supports (height: 100dvh) {
+  .app {
+    height: 100dvh;
+  }
+}
+
+/* desktop rail */
+.rail {
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 10px 8px;
+  gap: 4px;
+  min-height: 0;
+  overflow-y: auto;
+}
+.rail .logo {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 12px;
+}
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  display: grid;
+  place-items: center;
+}
+.rail a,
+.rail button {
+  border: 0;
+  background: none;
+  border-radius: var(--r-lg);
+  padding: 8px 2px;
+  cursor: pointer;
+  color: var(--faint);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font-size: 10.5px;
+  font-weight: 500;
+  text-decoration: none;
+}
+.rail a:hover,
+.rail button:hover:not(:disabled) {
+  background: var(--panel2);
+  color: var(--ink);
+}
+.rail a[aria-current="page"] {
+  background: var(--accentbg);
+  color: var(--title);
+  font-weight: 600;
+}
+.rail a[aria-current="page"] .ic {
+  fill: var(--okbg);
+}
+.rail button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* phone tab bar: hidden on desktop */
+.tabbar {
+  display: none;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* top bar */
+.top {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  flex-wrap: wrap;
+}
+.top .title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+.top .title h1 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--title);
+  letter-spacing: -0.02em;
+}
+.top .asof {
+  font-size: 12px;
+  color: var(--faint);
+  white-space: nowrap;
+}
+.top .strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  order: 2;
+}
+.top .strip::-webkit-scrollbar {
+  display: none;
+}
+.top .strip > * {
+  flex: none;
+}
+.top .top-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  order: 3;
+}
+.top .mini {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 150px;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.foot {
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+  padding: 4px 16px;
+  font-size: 11px;
+  color: var(--faint);
+}
+.foot.inline {
+  border-top: 0;
+  background: none;
+  padding: 10px 16px 14px;
+  text-align: center;
+}
+.page {
+  padding: 18px 20px 40px;
+  display: grid;
+  gap: 14px;
+  max-width: 1100px;
+  align-content: start;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* master / detail */
+.two {
+  display: grid;
+  grid-template-columns: minmax(340px, 420px) minmax(0, 1fr);
+  height: 100%;
+}
+.list {
+  overflow: auto;
+  border-right: 1px solid var(--line);
+  background: var(--panel);
+  min-height: 0;
+}
+.detail {
+  overflow: auto;
+  padding: 14px 18px 40px;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  grid-auto-rows: max-content;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+}
+.mhead {
+  display: none;
+}
+.gh {
+  position: sticky;
+  top: 0;
+  background: var(--panel2);
+  padding: 7px 14px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  color: var(--faint);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  z-index: 1;
+}
+.lrow {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 3px 10px;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  padding: 10px 14px;
+  cursor: pointer;
+  align-items: center;
+  color: inherit;
+}
+.lrow:hover {
+  background: var(--panel2);
+}
+.lrow.sel {
+  background: var(--accentbg);
+  box-shadow: inset 3px 0 0 var(--brand);
+}
+.lrow.static {
+  cursor: default;
+}
+.lrow .s {
+  font-weight: 600;
+  min-width: 0;
+  font-size: 14px;
+}
+.lrow .s small {
+  font-weight: 400;
+  margin-left: 6px;
+}
+.lrow .sub {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.list-empty {
+  padding: 12px 14px;
+  color: var(--muted);
+}
+.dh {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.dh h2 {
+  font-size: 22px;
+  color: var(--brand-deep);
+}
+.ticket {
+  background: var(--brand-deep);
+  color: #fff;
+  border-radius: var(--r-lg);
+  padding: 12px 14px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.ticket .t {
+  font-family: var(--mono);
+  font-size: 14px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ticket .t em {
+  font-style: normal;
+  color: #ffd700;
+}
+.ticket .btn {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+.ticket .btn.primary {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #053b33;
+}
+.ticket .t .src {
+  opacity: 0.6;
+}
+.refreshing {
+  font-size: 11px;
+  color: var(--faint);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ---------- phone (max-width 899px, same as MOBILE_QUERY): tab bar, one pane, green detail header ---------- */
+@media (max-width: 899px) {
+  .app {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .rail {
+    display: none;
+  }
+  .tabbar {
+    display: flex;
+    justify-content: space-around;
+    align-items: stretch;
+    height: calc(var(--tabbar) + var(--safe-b));
+    padding: 0 2px var(--safe-b);
+    background: var(--panel);
+    border-top: 1px solid var(--line);
+    z-index: 10;
+  }
+  .tabbar .t {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    color: var(--dim);
+    font-size: 10px;
+    font-weight: 500;
+    text-decoration: none;
+    min-width: 0;
+    padding: 4px 0;
+  }
+  .tabbar .t span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+  .tabbar .t .ic {
+    stroke-width: 1.6;
+  }
+  .tabbar .t.active {
+    color: var(--title);
+    font-weight: 600;
+  }
+  /* nine tabs (Journal and News joined the bar): at 41 px per tab a 10 px "Positions" is clipped, 9 px fits */
+  @media (max-width: 420px) {
+    .tabbar .t {
+      font-size: 9px;
+      letter-spacing: -0.02em;
+    }
+  }
+  .tabbar .t.active .ic {
+    fill: var(--okbg);
+  }
+
+  .top {
+    gap: 8px 10px;
+    padding: calc(8px + var(--safe-t)) 16px 8px;
+  }
+  .top .title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    order: 1;
+  }
+  .top .title h1 {
+    font-size: 22px;
+  }
+  .top .top-actions {
+    order: 2;
+  }
+  .top .top-actions .btn.primary {
+    padding: 8px 10px;
+  }
+  .top .top-actions .btn.primary .lbl {
+    display: none;
+  }
+  .top .strip {
+    order: 3;
+    flex-basis: 100%;
+    margin: 0 -16px;
+    padding: 0 16px;
+    gap: 8px;
+  }
+  .top .strip:empty {
+    display: none;
+  }
+  .top .mini {
+    min-width: 136px;
+  }
+
+  .body {
+    overflow-x: hidden;
+  }
+  .page {
+    padding: 14px 16px 24px;
+    gap: 12px;
+  }
+  /* The top bar and the green detail header already carry the title on a phone. */
+  .dh > h2,
+  .dh > h2 + .muted,
+  .page > .row > h2 {
+    display: none;
+  }
+
+  .two,
+  .two.one {
+    display: block;
+    height: auto;
+    min-height: 100%;
+  }
+  .list {
+    border-right: 0;
+    max-height: none;
+    overflow: visible;
+  }
+  .detail {
+    overflow: visible;
+    padding: 12px 16px 24px;
+  }
+  .gh {
+    top: 0;
+  }
+  .lrow {
+    min-height: 56px;
+    padding: 10px 16px;
+  }
+  .lrow.sel {
+    background: none;
+    box-shadow: none;
+  }
+  .mhead {
+    position: sticky;
+    top: 0;
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px 8px 4px;
+    background: var(--header);
+    color: var(--on-header);
+    min-height: 52px;
+  }
+  .mhead .back {
+    border: 0;
+    background: none;
+    color: inherit;
+    padding: 8px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .mhead .meta {
+    min-width: 0;
+    line-height: 1.2;
+  }
+  .mhead .name {
+    font-size: 16px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mhead .status {
+    font-size: 12px;
+    opacity: 0.85;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .dh .btn {
+    flex: 1 1 100%;
+  }
+  .kv {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .grid3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ticket .btn {
+    flex: 1 1 auto;
+  }
+  .ticket .row {
+    width: 100%;
+  }
+}
+@media (max-width: 420px) {
+  .tabbar .t {
+    font-size: 9px;
+    letter-spacing: -0.01em;
+  }
+}
+@media (max-width: 560px) {
+  .grid2,
+  .grid3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .modal > .mb {
+    padding: 12px 14px;
+  }
+  .page > .row .btn {
+    flex: 1 1 auto;
+  }
+}
+
+/* 320 px phones: eight tabs are about 40 px each, so labels drop to 9 px and Research / Positions still fit. */
+@media (max-width: 359px) {
+  .tabbar .t {
+    font-size: 9px;
+    letter-spacing: -0.02em;
+  }
+  .tabbar .t .ic {
+    width: 20px;
+    height: 20px;
+  }
+}

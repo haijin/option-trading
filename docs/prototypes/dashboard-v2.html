@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Dashboard prototype</title>
+<meta name="description" content="Option_Trading: Today shows only what needs attention or action; Stocks is the full watchlist with situation, risk and recommendation. Static prototype with sample data." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  color-scheme: light;
+  --bg:#f7f8fa; --panel:#fff; --panel2:#f0f2f5; --ink:#111b21; --ink2:#3b4a54; --muted:#54656f; --faint:#667781; --dim:#8696a0;
+  --line:#e9edef; --line2:#d1d7db; --brand:#25d366; --brand-dark:#128c7e; --brand-deep:#075e54; --brand-soft:#dcf8c6;
+  --accent:#128c7e; --accentbg:#d4f7df;
+  --ok:#075e54; --okbg:rgba(37,211,102,.16); --warn:#856404; --warnbg:#fff3c4; --fail:#c5221f; --failbg:#fde8e6;
+  --blue:#0086cb; --bluebg:rgba(52,183,241,.16); --chip:#f0f2f5; --star:#e0b000;
+  --shadow:0 1px 1px rgba(0,0,0,.04),0 1px 3px rgba(11,20,26,.06);
+  --r-sm:6px; --r-md:8px; --r-lg:12px; --tabbar:62px;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --sans:"Inter",-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  color-scheme:dark; --bg:#0b141a; --panel:#111b21; --panel2:#202c33; --ink:#e9edef; --ink2:#d1d7db; --muted:#aebac1; --faint:#8696a0; --dim:#667781;
+  --line:#222d34; --line2:#2a3942; --brand:#00a884; --brand-dark:#00a884; --brand-deep:#005c4b; --brand-soft:#005c4b; --accent:#00a884; --accentbg:#103a31;
+  --ok:#4cd18c; --okbg:#0f2f27; --warn:#f5c542; --warnbg:#3a2e0a; --fail:#f8766d; --failbg:#3b1a1e;
+  --blue:#53bdeb; --bluebg:#12303d; --chip:#202c33; --star:#f5c542; --shadow:none; } }
+:root[data-theme="dark"] {
+  color-scheme:dark; --bg:#0b141a; --panel:#111b21; --panel2:#202c33; --ink:#e9edef; --ink2:#d1d7db; --muted:#aebac1; --faint:#8696a0; --dim:#667781;
+  --line:#222d34; --line2:#2a3942; --brand:#00a884; --brand-dark:#00a884; --brand-deep:#005c4b; --brand-soft:#005c4b; --accent:#00a884; --accentbg:#103a31;
+  --ok:#4cd18c; --okbg:#0f2f27; --warn:#f5c542; --warnbg:#3a2e0a; --fail:#f8766d; --failbg:#3b1a1e;
+  --blue:#53bdeb; --bluebg:#12303d; --chip:#202c33; --star:#f5c542; --shadow:none; }
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--sans);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+a{color:inherit;text-decoration:none}
+button{font:inherit;border:0;background:none;color:inherit;cursor:pointer;padding:0}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.num{font-variant-numeric:tabular-nums}
+svg{display:block}
+
+/* frame */
+.app{min-height:100dvh;display:flex;flex-direction:column}
+.top{position:sticky;top:0;z-index:5;background:var(--panel);border-bottom:1px solid var(--line);padding:12px 16px 10px}
+.top .row{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.top h1{margin:0;font-size:22px;font-weight:700;color:var(--brand-deep);letter-spacing:-.02em}
+.top .asof{font-size:12.5px;color:var(--faint);white-space:nowrap}
+.top .regime{margin-top:6px;font-size:12.5px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+.top .regime i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--brand);margin-right:5px;vertical-align:1px}
+.top .regime i.w{background:var(--warn)}
+.top .tool{font-size:13px;color:var(--accent);font-weight:600}
+.body{flex:1;padding:16px 16px calc(var(--tabbar) + 28px);display:grid;gap:22px;align-content:start}
+.view{display:none}
+.view.on{display:contents}
+.tabbar{position:fixed;left:0;right:0;bottom:0;height:var(--tabbar);background:var(--panel);border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center;padding-bottom:env(safe-area-inset-bottom,0);z-index:5}
+.tabbar a{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:500;color:var(--faint);min-width:56px;position:relative}
+.tabbar a.active{color:var(--brand-dark);font-weight:600}
+.tabbar svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabbar .badge{position:absolute;top:-4px;right:8px;min-width:17px;height:17px;padding:0 5px;border-radius:9px;background:var(--fail);color:#fff;font-size:10.5px;font-weight:700;display:grid;place-items:center}
+
+/* generic */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:var(--r-sm);font-size:11px;font-weight:600;background:var(--chip);color:var(--muted);white-space:nowrap;line-height:1.5}
+.chip.ok{background:var(--okbg);color:var(--ok)} .chip.warn{background:var(--warnbg);color:var(--warn)} .chip.fail{background:var(--failbg);color:var(--fail)} .chip.blue{background:var(--bluebg);color:var(--blue)}
+.up{color:var(--ok)} .dn{color:var(--fail)} .flat{color:var(--faint)}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;border-radius:var(--r-md);font-weight:600;font-size:14px;background:var(--panel2);color:var(--ink)}
+.btn.primary{background:var(--brand-dark);color:#fff}
+.btn.sm{padding:7px 12px;font-size:13px}
+
+/* collapsible sections */
+.sec > .sh{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:2px 0 10px}
+.sec > .sh h2{margin:0;font-size:15px;font-weight:700;letter-spacing:-.01em;flex:none}
+.sec > .sh .cnt{font-size:12.5px;color:var(--faint);font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sec > .sh .chev{width:18px;height:18px;stroke:var(--dim);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s;flex:none}
+.sec.closed > .sh .chev{transform:rotate(-90deg)}
+.sec.closed > .sb{display:none}
+
+/* today: summary line */
+.sumline{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.sumline b{color:var(--ink);font-weight:600}
+.sumline span{display:inline-flex;gap:5px;align-items:center}
+
+/* today: action cards */
+.acts{display:grid;gap:10px}
+.act{padding:14px 14px 13px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;text-align:left;width:100%;border-left:3px solid var(--line2)}
+.act.sell{border-left-color:var(--brand)} .act.close{border-left-color:var(--blue)} .act.risk{border-left-color:var(--fail)} .act.confirm{border-left-color:var(--warn)}
+.act .ic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;grid-row:1/4;margin-top:1px}
+.act .ic svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.act.sell .ic{background:var(--okbg);color:var(--ok)} .act.close .ic{background:var(--bluebg);color:var(--blue)} .act.risk .ic{background:var(--failbg);color:var(--fail)} .act.confirm .ic{background:var(--warnbg);color:var(--warn)}
+.act .what{font-weight:700;font-size:16px;letter-spacing:-.01em;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.act .what .ret{margin-left:auto;color:var(--ok);font-size:17px}
+.act .c{font-family:var(--mono);font-size:14px;color:var(--ink)}
+.act .why{font-size:13.5px;color:var(--ink2);line-height:1.4;margin-top:2px}
+.act .deal{grid-column:2;display:flex;gap:16px;margin-top:8px;padding-top:9px;border-top:1px solid var(--line)}
+.act .deal span{font-size:12px;color:var(--faint)}
+.act .deal b{display:block;font-size:15px;font-weight:700;color:var(--ink)}
+.act .deal b.k{color:var(--ok)}
+.act .row{grid-column:2;display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.act .row .sz{font-size:12.5px;color:var(--muted);font-weight:600;flex:1 1 100%;display:flex;gap:8px;align-items:center}
+.act .row .btn{flex:1}
+
+/* today: changes */
+.chg{overflow:hidden}
+.chg .r{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line);font-size:14px}
+.chg .r:last-child{border-bottom:0}
+.chg .sym{font-weight:700}
+.chg .arrow{color:var(--faint);font-size:12.5px}
+.chg .arrow b{font-weight:600}
+.chg .arrow b.ok{color:var(--ok)} .chg .arrow b.warn{color:var(--warn)} .chg .arrow b.fail{color:var(--fail)}
+.chg .r small{display:block;color:var(--faint);font-size:12.5px;margin-top:1px}
+.chg .r .go{color:var(--dim);font-size:18px}
+
+/* news */
+.feed{display:grid;gap:10px}
+.news{padding:13px 14px 12px;display:grid;gap:6px;text-align:left;width:100%;border-left:3px solid var(--line2)}
+.news.supports{border-left-color:var(--brand)} .news.caution{border-left-color:var(--warn)} .news.blocks{border-left-color:var(--fail)}
+.news .hd{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--faint)}
+.news .hd .sym{font-weight:700;color:var(--ink);font-size:14px}
+.news .hd .when{margin-left:auto}
+.news h3{margin:0;font-size:14.5px;font-weight:600;line-height:1.35}
+.news .imp{font-size:13.5px;color:var(--ink2);line-height:1.4}
+.news .imp b{font-weight:700}
+.news.supports .imp b{color:var(--ok)} .news.caution .imp b{color:var(--warn)} .news.blocks .imp b{color:var(--fail)}
+.news .so{display:none;gap:5px;margin-top:4px;padding-top:8px;border-top:1px solid var(--line);font-size:13px;color:var(--ink2)}
+.news.x .so{display:grid}
+.news .so div{display:flex;gap:8px}
+.news .so .k{flex:none;width:18px;height:18px;border-radius:4px;font-size:10px;font-weight:800;display:grid;place-items:center;margin-top:1px}
+.news .so .k.f{background:var(--bluebg);color:var(--blue)} .news .so .k.t{background:var(--chip);color:var(--muted)} .news .so .k.e{background:var(--warnbg);color:var(--warn)}
+.more-btn{text-align:center;padding:12px;font-size:14px;color:var(--accent);font-weight:600;width:100%}
+.foot{font-size:11.5px;color:var(--faint);text-align:center;padding:4px 8px 0}
+.empty{padding:28px 16px;text-align:center;color:var(--faint);font-size:14px}
+
+/* stocks page */
+.seg{display:flex;gap:4px;background:var(--panel2);padding:3px;border-radius:999px;margin-bottom:12px}
+.seg button{flex:1;padding:6px 6px;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap}
+.seg button.on{background:var(--panel);color:var(--ink);box-shadow:var(--shadow)}
+.seg button small{color:var(--dim);font-weight:500;margin-left:3px}
+.addrow{display:none;gap:8px;margin-bottom:12px}
+.editing .addrow{display:flex}
+.addrow input{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line2);border-radius:var(--r-md);background:var(--panel);color:var(--ink);font:inherit;font-size:14px}
+.addrow .btn{flex:none}
+.stocks{overflow:hidden}
+.stk{border-bottom:1px solid var(--line);border-left:3px solid transparent}
+.stk:last-child{border-bottom:0}
+.stk .main{display:grid;grid-template-columns:1fr auto;gap:5px 10px;padding:13px 14px 12px 12px;width:100%;text-align:left}
+.stk .sym{font-weight:700;font-size:16px;letter-spacing:-.01em}
+.stk .sym small{font-weight:400;font-size:12px;color:var(--faint);margin-left:6px}
+.stk .px{text-align:right;font-weight:600;font-size:15px;white-space:nowrap}
+.stk .px small{font-size:12px;font-weight:600;margin-left:6px}
+.stk .act2{display:none;gap:6px;align-items:center}
+.stk .act2 button{padding:5px 10px;border-radius:var(--r-sm);font-size:12px;font-weight:600;background:var(--panel2);color:var(--muted)}
+.stk .act2 button.rm{color:var(--fail);background:var(--failbg)}
+.editing .stk .px{display:none} .editing .stk .act2{display:inline-flex}
+.stk .rec{grid-column:1/-1;display:flex;gap:8px;align-items:flex-start;font-size:14px;font-weight:600;line-height:1.35}
+.stk .rec .risk{flex:none;margin-top:1px}
+.risk{display:inline-flex;align-items:center;padding:2px 8px;border-radius:var(--r-sm);font-size:11px;font-weight:700;white-space:nowrap}
+.risk.low{background:var(--okbg);color:var(--ok)} .risk.med{background:var(--warnbg);color:var(--warn)} .risk.high{background:var(--failbg);color:var(--fail)}
+.stk.ready{border-left-color:var(--brand)} .stk.wait{border-left-color:var(--warn)} .stk.avoid{border-left-color:var(--fail)} .stk.open{border-left-color:var(--blue)}
+.stk.ready .rec{color:var(--ok)} .stk.wait .rec{color:var(--warn)} .stk.avoid .rec{color:var(--fail)} .stk.open .rec{color:var(--blue)}
+.stk .more{display:none;padding:0 14px 14px 12px;font-size:13.5px;color:var(--ink2)}
+.stk.x .more{display:block}
+.stk .more .spark{height:36px;margin:2px 0 10px}
+.stk .more .spark svg{width:100%;height:36px}
+.stk .more .kv{display:grid;grid-template-columns:auto 1fr;gap:5px 12px}
+.stk .more .kv b{font-weight:600;color:var(--faint);font-size:12px;text-transform:uppercase;letter-spacing:.05em;padding-top:2px}
+.stk .more .lnk{display:inline-block;margin-top:10px;font-size:13px;font-weight:600;color:var(--accent)}
+.ft{display:inline-flex;gap:3px;align-items:center;font-size:11px;font-weight:700;color:var(--faint);margin-right:8px}
+.ft i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.ft i.p{background:var(--brand)} .ft i.w{background:var(--warn)} .ft i.f{background:var(--fail)}
+.stars{color:var(--star);font-size:12px;letter-spacing:-1px}
+
+/* desktop */
+@media (min-width: 900px) {
+  .tabbar{display:none}
+  .body{padding:22px 24px 40px;max-width:1100px;margin:0 auto;width:100%}
+  #view-today.on{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:0 24px;grid-column:1/-1}
+  #view-today .sumline,#view-today .foot{grid-column:1/-1}
+  .top{padding:12px 24px}
+  .top .inner{max-width:1100px;margin:0 auto}
+  .desknav{display:flex;gap:4px;margin-top:8px}
+  .desknav a{padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted)}
+  .desknav a.active{background:var(--accentbg);color:var(--brand-deep)}
+}
+.desknav{display:none}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top"><div class="inner">
+    <div class="row"><h1 id="title">Today</h1><span class="asof" id="asof">Fri 10 Oct 2026 · scan 16:32</span></div>
+    <div class="regime" id="regime"><span><i></i>US bull-calm</span><span><i class="w"></i>HK bull-choppy</span><span>Deployed 22% of 50%</span></div>
+    <nav class="desknav"><a class="active" href="#today">Today</a><a href="#stocks">Stocks</a><a href="#positions">Positions</a><a href="#research">Research</a><a href="#data">Data</a><a href="#settings">Settings</a></nav>
+  </div></header>
+
+  <main class="body">
+
+    <!-- ================= TODAY: only what needs attention ================= -->
+    <div class="view on" id="view-today">
+      <p class="sumline"><span><b>4</b> to act on</span><span><b>3</b> changed</span><span><b>18</b> watched, all data fresh</span></p>
+
+      <section class="sec" id="sec-act">
+        <button class="sh" type="button" data-toggle="sec-act" aria-expanded="true">
+          <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          <h2>Act on</h2><span class="cnt">2 puts to sell · 1 position · 1 confirm</span>
+        </button>
+        <div class="sb"><div class="acts" id="acts"></div></div>
+      </section>
+
+      <section class="sec" id="sec-chg">
+        <button class="sh" type="button" data-toggle="sec-chg" aria-expanded="true">
+          <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          <h2>Changed since yesterday</h2><span class="cnt">3</span>
+        </button>
+        <div class="sb"><div class="card chg" id="chg"></div></div>
+      </section>
+
+      <section class="sec" id="sec-news">
+        <button class="sh" type="button" data-toggle="sec-news" aria-expanded="true">
+          <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          <h2>News that matters</h2><span class="cnt">4 this week</span>
+        </button>
+        <div class="sb">
+          <div class="feed" id="feed"></div>
+          <button class="more-btn" type="button">All news, including neutral ›</button>
+        </div>
+      </section>
+
+      <p class="foot">Decision support only. Not investment advice. Sample data for the prototype.</p>
+    </div>
+
+    <!-- ================= STOCKS: the full list ================= -->
+    <div class="view" id="view-stocks">
+      <section class="sec" id="sec-stocks">
+        <div class="sh" style="padding-bottom:12px"><h2 style="font-size:15px">18 stocks</h2><span class="cnt">5 to sell, 8 wait, 2 avoid, 3 open</span><button class="tool" id="editToggle" type="button" style="font-size:13px;color:var(--accent);font-weight:600">Edit list</button></div>
+        <div class="addrow">
+          <input type="text" autocapitalize="characters" placeholder="Add: NKE, 0700.HK, 9988.HK" aria-label="Add a stock" />
+          <button class="btn primary" type="button">Add</button>
+        </div>
+        <div class="seg" role="tablist">
+          <button class="on" role="tab">All</button><button role="tab">Sell<small>5</small></button><button role="tab">Wait<small>8</small></button><button role="tab">Avoid<small>2</small></button><button role="tab">Open<small>3</small></button>
+        </div>
+        <div class="stocks card" id="stocks"></div>
+      </section>
+      <p class="foot">Tap a row for the situation and checks. Edit list to add, pause or remove.</p>
+    </div>
+
+  </main>
+
+  <nav class="tabbar" aria-label="Main">
+    <a class="active" href="#today" data-view="today"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Today</span><span class="badge">4</span></a>
+    <a href="#stocks" data-view="stocks"><svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg><span>Stocks</span></a>
+    <a href="#positions"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M7 15l4-5 3 3 5-7"/></svg><span>Positions</span></a>
+    <a href="#research"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Research</span></a>
+    <a href="#data"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span>Data</span></a>
+    <a href="#settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span>Settings</span></a>
+  </nav>
+</div>
+
+<script>
+// ---------- sample data (shapes mirror src/server/api-types.ts; values are illustrative) ----------
+// Today lists only items that are new or need a decision. Ideas you have already seen and not acted on stay on the Stocks page.
+const ACTS = [
+  { kind:'sell', sym:'NKE', name:'NIKE', spot:72.40, ret:19.4, c:'Sell 14 Nov · 65 put · 35 days', why:'New today. Strike 10% below spot and under the 50-day support at 68.', keep:81, prem:1.21, gap:10.2, size:'2 contracts · S$16.8k', primary:'Log the sale', secondary:'Why' },
+  { kind:'sell', sym:'META', name:'Meta Platforms', spot:718.00, ret:14.8, c:'Sell 21 Nov · 640 put · 42 days', why:'New today. Pullback to the 100-day. Earnings 29 Oct are inside the window, so half size.', keep:85, prem:10.90, gap:10.9, size:'1 contract · S$82k · half size', primary:'Log the sale', secondary:'Why', warn:'earnings in window' },
+  { kind:'close', sym:'MSFT', name:'Microsoft', spot:512.60, c:'31 Oct · 480 put · 21 days on Monday', why:'Rule: close or roll at 21 days. 6.4% out of the money, 71% of the credit already captured.', primary:'Log close', secondary:'Roll' },
+  { kind:'confirm', sym:'TCOM', name:'Trip.com', spot:66.20, ret:12.6, c:'Sell 14 Nov · 60 put · 35 days', why:'Passes every rule, but the price is modelled from realised volatility. Paste the broker chain to confirm before selling.', keep:86, prem:0.73, gap:9.4, size:'2 contracts · S$15.4k', primary:'Paste chain', secondary:'Why', warn:'modelled price' },
+];
+const CHANGES = [
+  { sym:'BABA', from:['Sell', 'ok'], to:['Wait', 'warn'], note:'Jumped 5%, now 14% above the 50-day. Wait for a pullback toward 150.' },
+  { sym:'COIN', from:['Wait', 'warn'], to:['Avoid', 'fail'], note:'Fell 7%, broke the 50- and 100-day. Quality gate still fails.' },
+  { sym:'RDDT', from:['Low risk', 'ok'], to:['High risk', 'fail'], note:'Open 14 Nov 190 put. Trend turned down; close if spot nears 200.' },
+];
+const FEED = [
+  { imp:'supports', sym:'NKE',  when:'1 Oct',  src:'Earnings', h:'Nike Q1: revenue +1%, gross margin 42.2%, inventories down 2%.', one:'<b>Supports</b> the 14 Nov 65 put: gate back to PASS, price held the 50-day.', so:[['f','Quality gate PASS: FCF margin back above 8%, net cash'],['t','Gapped above the 50-day and held it for 6 sessions'],['e','Next earnings ~18 Dec, outside the window']] },
+  { imp:'blocks',   sym:'TSLA', when:'2 Oct',  src:'Event',    h:'Q3 deliveries beat; earnings call confirmed for 22 Oct.', one:'<b>Blocks</b> new puts until 23 Oct: earnings sit inside every 30 to 45 day expiry.', so:[['e','Earnings inside the window'],['f','Price 3.8x intrinsic value (1 star): would fail valuation too']] },
+  { imp:'blocks',   sym:'COIN', when:'10 Oct', src:'Signal',   h:'COIN -7.1%, closed below the 50- and 100-day.', one:'<b>Blocks</b>: trend flipped to down and the quality gate already fails.', so:[['t','Support at 320 is 5% away'],['f','Solvency model (financial) below threshold']] },
+  { imp:'caution',  sym:'BABA', when:'9 Oct',  src:'Yahoo',    h:'Alibaba +5% after Qwen3 launch and cloud capex upgrade.', one:'<b>Caution</b>: now 14% above the 50-day, timing wants a pullback toward 150.', so:[['t','Timing score 41, extended'],['f','Quality gate PASS, 4-star value']] },
+];
+const STOCKS = [
+  { sym:'NKE',  name:'NIKE',          px:72.40,  chg:+1.8, f:'p', t:'p', stars:4, cls:'ready', risk:'low',  rec:'Sell 14 Nov 65 put · 19.4%/yr',   sit:'Uptrend, held the 50-day after Q1 results. IV rank 58 keeps the premium rich.', spark:[61,62,60,63,66,65,68,70,69,71,72] },
+  { sym:'PDD',  name:'PDD Holdings',  px:121.30, chg:-0.6, f:'p', t:'p', stars:5, cls:'ready', risk:'low',  rec:'Sell 14 Nov 105 put · 17.1%/yr',  sit:'Range-bound 116 to 124. Net cash, 5-star value if assigned.', spark:[118,116,119,121,117,120,123,122,120,122,121] },
+  { sym:'META', name:'Meta Platforms',px:718.00, chg:-1.1, f:'p', t:'p', stars:3, cls:'ready', risk:'med',  rec:'Sell 21 Nov 640 put · 14.8%/yr · half size', sit:'Pulled back to the 100-day. Earnings 29 Oct fall inside the window, so size is halved.', spark:[740,735,748,752,730,725,738,722,715,724,718] },
+  { sym:'BX',   name:'Blackstone',    px:158.20, chg:+0.4, f:'p', t:'p', stars:3, cls:'ready', risk:'low',  rec:'Sell 14 Nov 145 put · 13.2%/yr',  sit:'Uptrend, above all moving averages. IV rank 44.', spark:[150,152,151,155,154,157,156,159,158,157,158] },
+  { sym:'TCOM', name:'Trip.com',      px:66.20,  chg:+0.3, f:'p', t:'p', stars:3, cls:'ready', risk:'med',  rec:'Sell 14 Nov 60 put · 12.6%/yr · confirm price', sit:'Sideways above the 50-day. Chain is modelled, paste a broker chain first.', spark:[62,63,64,63,65,66,65,67,66,66,66] },
+  { sym:'BABA', name:'Alibaba',       px:171.90, chg:+4.9, f:'p', t:'w', stars:4, cls:'wait',  risk:'med',  rec:'Wait for a pullback toward 150',   sit:'14% above the 50-day after a four-week run. Timing score 41.', spark:[138,142,147,150,156,160,158,163,167,164,172] },
+  { sym:'TSLA', name:'Tesla',         px:429.80, chg:-2.3, f:'w', t:'p', stars:1, cls:'wait',  risk:'high', rec:'Wait until after earnings (22 Oct)', sit:'Uptrend, but earnings 22 Oct block every expiry in the window. Price 3.8x intrinsic value.', spark:[395,405,410,420,440,446,432,438,445,440,430] },
+  { sym:'NVDA', name:'NVIDIA',        px:183.20, chg:+0.9, f:'p', t:'p', stars:3, cls:'wait',  risk:'low',  rec:'Wait: best put pays 7.9%, under 10%', sit:'Uptrend. IV rank 18, premium too thin at any strike in the band.', spark:[170,172,176,178,181,185,183,180,186,182,183] },
+  { sym:'AAPL', name:'Apple',         px:245.30, chg:+0.2, f:'p', t:'p', stars:2, cls:'wait',  risk:'low',  rec:'Wait: best put pays 8.4%, under 10%', sit:'Uptrend. IV rank 22, premium too thin.', spark:[228,232,236,240,238,244,246,250,248,246,245] },
+  { sym:'BIDU', name:'Baidu',         px:128.40, chg:+2.1, f:'w', t:'w', stars:4, cls:'wait',  risk:'med',  rec:'Wait for a close above 132',       sit:'Rebounding but still below the 200-day. Operating margin trend WARN.', spark:[90,92,96,104,112,120,118,126,132,129,128] },
+  { sym:'SE',   name:'Sea',           px:168.70, chg:-1.4, f:'p', t:'w', stars:2, cls:'wait',  risk:'med',  rec:'Wait for the trend to turn',       sit:'Downtrend, 8% below the 50-day.', spark:[182,180,176,178,174,172,175,171,170,168,169] },
+  { sym:'LULU', name:'lululemon',     px:171.50, chg:-0.8, f:'w', t:'f', stars:4, cls:'wait',  risk:'high', rec:'Wait: no support below to lean on', sit:'Downtrend below the 200-day. Earnings 4 Dec.', spark:[200,196,190,185,182,180,176,178,174,172,172] },
+  { sym:'SNOW', name:'Snowflake',     px:231.20, chg:+1.1, f:'w', t:'p', stars:1, cls:'wait',  risk:'med',  rec:'Wait: no strike in band pays 10%', sit:'Uptrend. No free cash flow yet, 1-star value.', spark:[218,222,226,224,230,236,232,235,229,229,231] },
+  { sym:'PLTR', name:'Palantir',      px:181.40, chg:+3.2, f:'p', t:'p', stars:1, cls:'avoid', risk:'high', rec:'Avoid: would not want assignment', sit:'Uptrend, but price is 3.1x intrinsic value.', spark:[150,156,160,168,172,170,176,180,178,176,181] },
+  { sym:'COIN', name:'Coinbase',      px:338.10, chg:-7.1, f:'f', t:'f', stars:2, cls:'avoid', risk:'high', rec:'Avoid: solvency screen fails',     sit:'Broke the 50- and 100-day today on the crypto sell-off. Quality gate FAIL.', spark:[380,372,376,368,360,365,355,362,364,364,338] },
+  { sym:'MSFT', name:'Microsoft',     px:512.60, chg:-0.4, f:'p', t:'p', stars:3, cls:'open',  risk:'low',  rec:'Close or roll Monday (21-day rule)', sit:'31 Oct 480 put open. 6.4% out of the money, 71% of credit captured.', spark:[505,508,512,515,510,517,520,514,516,513,513] },
+  { sym:'JD',   name:'JD.com',        px:33.10,  chg:+0.7, f:'p', t:'w', stars:5, cls:'open',  risk:'med',  rec:'Hold to expiry',                   sit:'17 Oct 31 put open. 6.3% out of the money, 10 days left. 5-star value if assigned.', spark:[34,33.5,33,32,31.5,32,32.5,33,32.8,33.2,33.1] },
+  { sym:'RDDT', name:'Reddit',        px:212.40, chg:-0.9, f:'w', t:'w', stars:1, cls:'open',  risk:'high', rec:'Watch: close if spot nears 200',   sit:'14 Nov 190 put open. 10.5% out of the money but the trend is down.', spark:[230,226,222,228,220,216,218,214,210,214,212] },
+];
+
+const ICON = {
+  sell:'<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>',
+  close:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  risk:'<svg viewBox="0 0 24 24"><path d="M12 3l10 18H2z M12 10v4M12 17.5v.5"/></svg>',
+  confirm:'<svg viewBox="0 0 24 24"><path d="M9 3h6l1 2h3v16H5V5h3zM9 12l2 2 4-4"/></svg>',
+};
+document.getElementById('acts').innerHTML = ACTS.map(a => `
+  <div class="card act ${a.kind}">
+    <span class="ic">${ICON[a.kind]}</span>
+    <span class="what">${a.sym}<small style="font-weight:400;font-size:12px;color:var(--faint)">${a.name} · ${a.spot.toFixed(2)}</small>${a.ret ? `<span class="ret num">${a.ret.toFixed(1)}%<small style="font-size:11px;color:var(--faint);font-weight:500"> /yr</small></span>` : ''}</span>
+    <span class="c">${a.c}</span>
+    <span class="why">${a.why}</span>
+    ${a.keep ? `<span class="deal num"><span>Keep premium<b class="k">${a.keep}%</b></span><span>Premium<b>${a.prem.toFixed(2)} /sh</b></span><span>Below spot<b>${a.gap.toFixed(1)}%</b></span></span>` : ''}
+    <span class="row"><span class="sz">${a.size || ''}${a.warn ? `<span class="chip warn">${a.warn}</span>` : ''}</span><button class="btn sm" type="button">${a.secondary}</button><button class="btn sm primary" type="button">${a.primary}</button></span>
+  </div>`).join('');
+
+document.getElementById('chg').innerHTML = CHANGES.map(c => `
+  <div class="r">
+    <span class="sym">${c.sym}</span>
+    <span><span class="arrow"><b class="${c.from[1]}">${c.from[0]}</b> → <b class="${c.to[1]}">${c.to[0]}</b></span><small>${c.note}</small></span>
+    <span class="go">›</span>
+  </div>`).join('');
+
+document.getElementById('feed').innerHTML = FEED.map((n, i) => `
+  <button class="card news ${n.imp}" type="button" data-x="news${i}" id="news${i}">
+    <span class="hd"><span class="sym">${n.sym}</span><span class="chip">${n.src}</span><span class="when">${n.when}</span></span>
+    <h3>${n.h}</h3>
+    <span class="imp">${n.one}</span>
+    <span class="so">${n.so.map(([k, t]) => `<div><span class="k ${k}">${k.toUpperCase()}</span><span>${t}</span></div>`).join('')}</span>
+  </button>`).join('');
+
+function spark(vals) {
+  const w = 300, h = 36, min = Math.min(...vals), max = Math.max(...vals);
+  const pts = vals.map((v, i) => [i / (vals.length - 1) * w, h - 2 - ((v - min) / ((max - min) || 1)) * (h - 4)]);
+  const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const color = vals[vals.length - 1] >= vals[0] ? 'var(--brand-dark)' : 'var(--fail)';
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><path d="${d}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linejoin="round"/></svg>`;
+}
+const RISK = { low:'Low risk', med:'Medium', high:'High risk' };
+const FT = { p:'PASS', w:'WARN', f:'FAIL' };
+document.getElementById('stocks').innerHTML = STOCKS.map((s, i) => `
+  <div class="stk ${s.cls}" id="stk${i}">
+    <div class="main" role="button" tabindex="0" data-x="stk${i}">
+      <span class="sym">${s.sym}<small>${s.name}</small></span>
+      <span class="px num">${s.px.toFixed(2)}<small class="${s.chg > 0 ? 'up' : s.chg < 0 ? 'dn' : 'flat'}">${s.chg > 0 ? '+' : ''}${s.chg.toFixed(1)}%</small></span>
+      <span class="act2"><button type="button">Pause</button><button type="button" class="rm">Remove</button></span>
+      <span class="rec"><span class="risk ${s.risk}">${RISK[s.risk]}</span><span>${s.rec}</span></span>
+    </div>
+    <div class="more">
+      <div class="spark">${spark(s.spark)}</div>
+      <div class="kv">
+        <b>Now</b><span>${s.sit}</span>
+        <b>Checks</b><span><span class="ft">Fundamentals<i class="${s.f}"></i> ${FT[s.f]}</span><span class="ft">Timing<i class="${s.t}"></i> ${FT[s.t]}</span><span class="stars">${'★'.repeat(s.stars)}${'☆'.repeat(5 - s.stars)}</span></span>
+      </div>
+      <a class="lnk" href="#detail">Full reasons ›</a>
+    </div>
+  </div>`).join('');
+
+// view switching (Today / Stocks)
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === 'view-' + name));
+  document.querySelectorAll('.tabbar a, .desknav a').forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + name));
+  document.getElementById('title').textContent = name === 'stocks' ? 'Stocks' : 'Today';
+  document.getElementById('regime').style.display = name === 'stocks' ? 'none' : '';
+  window.scrollTo(0, 0);
+}
+window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (h === 'today' || h === 'stocks') showView(h); });
+document.querySelectorAll('[data-view], .desknav a').forEach(a => a.addEventListener('click', (e) => {
+  const h = a.getAttribute('href').slice(1);
+  if (h === 'today' || h === 'stocks') { e.preventDefault(); showView(h); }
+}));
+if (location.hash === '#stocks') showView('stocks');
+
+document.querySelectorAll('[data-toggle]').forEach(b => b.addEventListener('click', () => {
+  const sec = document.getElementById(b.dataset.toggle);
+  b.setAttribute('aria-expanded', String(!sec.classList.toggle('closed')));
+}));
+document.querySelectorAll('[data-x]').forEach(b => b.addEventListener('click', (e) => {
+  if (e.target.closest('.act2')) return;
+  document.getElementById(b.dataset.x).classList.toggle('x');
+}));
+document.getElementById('editToggle').addEventListener('click', (e) => {
+  const sec = document.getElementById('sec-stocks');
+  e.currentTarget.textContent = sec.classList.toggle('editing') ? 'Done' : 'Edit list';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<rss version="2.0">
+    <channel>
+        <description>Latest Financial News for 0700.HK</description>
+        <item>
+            <description>Tencent extends its share buyback as shares trade above the 50-day average.</description>
+            <guid isPermaLink="false">0700-a</guid>
+            <link>https://finance.yahoo.com/markets/stocks/articles/tencent-extends-buyback-231500123.html?.tsrc=rss</link>
+            <pubDate>Mon, 12 Oct 2026 23:15:00 +0000</pubDate>
+            <title>Tencent extends its share buyback</title>
+        </item>
+        <item>
+            <description>Hang Seng technology names lead the rebound; Alibaba and Tencent gain.</description>
+            <guid isPermaLink="false">shared-1</guid>
+            <link>https://finance.yahoo.com/markets/stocks/articles/hk-tech-rebound-120000555.html?.tsrc=rss</link>
+            <pubDate>Mon, 12 Oct 2026 12:00:00 +0000</pubDate>
+            <title>HK tech leads the rebound</title>
+        </item>
+    </channel>
+</rss>

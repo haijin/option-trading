@@ -1,0 +1,959 @@
+/* ---------- Home (the desk), Reminders, the More sheet and the bell (docs/designs/app-dashboard.md, stage D1) ---------- */
+
+/* the bell in the top bar */
+.top .bell {
+  position: relative;
+}
+.top .bell .bdg {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--fail);
+  color: #fff;
+  font: 600 11px / 18px var(--mono);
+  text-align: center;
+}
+
+/* the More sheet */
+.more-list {
+  display: grid;
+  margin: -4px 0;
+}
+.more-row {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  min-height: 52px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  text-decoration: none;
+}
+.more-row:last-child {
+  border-bottom: 0;
+}
+.more-row .ic {
+  color: var(--brand-dark);
+}
+.more-row > span:nth-child(2) {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.more-row b {
+  font-weight: 600;
+}
+.more-row .sub {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.more-row .go {
+  font-size: 20px;
+  color: var(--dim);
+}
+.modal.more-sheet > .mf .btn {
+  justify-content: center;
+}
+
+/* ---------- session card ---------- */
+.hm-sess {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.hm-tl {
+  min-width: 0;
+}
+.hm-sess .now {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.hm-sess .now b {
+  font-size: 15px;
+  font-weight: 600;
+}
+.hm-sess .now .sub {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.hm-sess .now .clock {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink2);
+}
+/* a laptop lays the three parts side by side in one strip: the words, the 24-hour band, the two markets */
+@media (min-width: 1100px) {
+  .hm-sess {
+    grid-template-columns: minmax(190px, 0.8fr) minmax(280px, 2fr) minmax(300px, 1.5fr);
+    align-items: center;
+    gap: 6px 28px;
+    padding: 10px 18px;
+  }
+  .hm-sess .now {
+    display: grid;
+    gap: 1px;
+    align-content: center;
+  }
+  .hm-sess .now .clock {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 1.15;
+    order: -1;
+  }
+}
+.hm-band {
+  position: relative;
+  height: 26px;
+  margin-top: 4px;
+  background: var(--panel2);
+  border-radius: var(--r-sm);
+}
+.hm-band .blk {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  border-radius: 3px;
+  background: var(--brand-dark);
+  color: #fff;
+  font: 600 10px / 16px var(--mono);
+  padding-left: 5px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.hm-band .blk.us {
+  opacity: 0.45;
+}
+.hm-band .blk.open {
+  opacity: 1;
+  box-shadow: 0 0 0 2px var(--brand-soft);
+}
+.hm-band .nowm {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  background: var(--ink);
+  border-radius: 1px;
+}
+.hm-band .nowm::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+.hm-ticks {
+  position: relative;
+  height: 14px;
+  font: 10px / 14px var(--mono);
+  color: var(--faint);
+}
+.hm-ticks span {
+  position: absolute;
+  transform: translateX(-50%);
+}
+.hm-ticks span:first-child {
+  transform: none;
+}
+.hm-ticks span:last-child {
+  transform: translateX(-100%);
+}
+/* the two markets: side by side at every width, each a name and regime chip over its capital meter */
+.hm-state {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+@media (min-width: 1100px) {
+  .hm-state {
+    padding: 0 0 0 24px;
+    border-top: 0;
+    border-left: 1px solid var(--line);
+  }
+}
+.hm-mk {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.hm-mk .hd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.hm-mk .hd b {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 600;
+}
+.hm-mk .hd .chip {
+  white-space: nowrap;
+}
+.hm-mk .hd small {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+.hm-mk .mini {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.hm-mk .mini > span {
+  font-size: 12px;
+  color: var(--ink2);
+}
+.hm-mk-empty {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ---------- module panel ---------- */
+.hm-mod {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  scroll-margin-top: 8px;
+}
+.hm-body {
+  min-width: 0;
+}
+.hm-mh {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 14px 9px;
+  flex: none;
+  flex-wrap: wrap;
+}
+.hm-mh h2 {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--title);
+}
+.hm-n {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ok);
+  background: var(--okbg);
+  padding: 1px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.hm-n.warn {
+  color: var(--warn);
+  background: var(--warnbg);
+}
+.hm-n.fail {
+  color: var(--fail);
+  background: var(--failbg);
+}
+.hm-n.quiet {
+  color: var(--muted);
+  background: var(--chip);
+}
+.hm-mh .hm-act {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hm-open {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 13px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.hm-mf {
+  flex: none;
+  padding: 9px 14px 11px;
+  font-size: 12.5px;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 6px 14px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.hm-mf .right {
+  margin-left: auto;
+}
+.hm-dist {
+  display: inline-flex;
+  gap: 2px;
+  height: 6px;
+  width: 96px;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.hm-dist i {
+  display: block;
+  height: 100%;
+}
+.hm-dist i.sell {
+  background: var(--ok);
+}
+.hm-dist i.wait {
+  background: var(--warn);
+}
+.hm-dist i.open {
+  background: var(--blue);
+}
+.hm-empty {
+  padding: 12px 14px 14px;
+  font-size: 13px;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+}
+.hm-empty a {
+  font-weight: 600;
+}
+.hm-row {
+  display: grid;
+  padding: 9px 14px;
+  border-top: 1px solid var(--line);
+  gap: 2px 10px;
+  align-items: center;
+  text-align: left;
+  width: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+.hm-row:hover {
+  background: var(--panel2);
+}
+.hm-row .sym {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+.hm-row .sym b {
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 14.5px;
+}
+.hm-row .sym small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+}
+.hm-row .sym .mk {
+  font-size: 10px;
+  font-weight: 600;
+  border: 1px solid var(--line2);
+  border-radius: 4px;
+  padding: 0 4px;
+  color: var(--muted);
+  line-height: 15px;
+}
+.hm-row .meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--muted);
+}
+.hm-row .meta b {
+  color: var(--ink2);
+  font-weight: 500;
+}
+
+/* puts */
+.hm-row.put {
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "rk sym ret"
+    ". ln ret";
+}
+/* the contract and its facts share one wrapping line: two lines per idea in a wide column, three on a phone */
+.hm-row.put .ln {
+  grid-area: ln;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 1px 14px;
+  min-width: 0;
+}
+.hm-row.put .rk {
+  grid-area: rk;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  align-self: start;
+  padding-top: 3px;
+}
+.hm-row.put .sym {
+  grid-area: sym;
+}
+.hm-row.put .ctr {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  white-space: nowrap;
+}
+.hm-row.put .ctr .d {
+  color: var(--muted);
+  margin-left: 8px;
+}
+.hm-row.put .ret {
+  grid-area: ret;
+  text-align: right;
+}
+.hm-row.put .ret b {
+  display: block;
+  font-family: var(--mono);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ok);
+  line-height: 1.1;
+}
+.hm-row.put .ret small {
+  display: block;
+  color: var(--muted);
+}
+
+/* leaders */
+.hm-row.ldr {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "sym st"
+    "ln ln";
+}
+.hm-row.ldr .sym {
+  grid-area: sym;
+}
+.hm-row.ldr .st {
+  grid-area: st;
+}
+.hm-row.ldr .ln {
+  grid-area: ln;
+  display: flex;
+  gap: 1px 12px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.hm-row.ldr .ln b {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--ink);
+}
+.hm-row.ldr .ln .new {
+  color: var(--ok);
+  font-weight: 600;
+}
+
+/* news */
+.hm-row.nw {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3px;
+}
+.hm-row.nw .l1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  min-width: 0;
+}
+.hm-row.nw .l1 b {
+  font-family: var(--mono);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 13px;
+}
+.hm-row.nw .l1 .t {
+  margin-left: auto;
+  white-space: nowrap;
+}
+.hm-row.nw .h {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.hm-row.nw .w {
+  font-size: 12.5px;
+  color: var(--ink2);
+  line-height: 1.35;
+}
+.hm-imp {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 4px;
+  background: var(--chip);
+  color: var(--muted);
+}
+.hm-imp.blocks {
+  background: var(--failbg);
+  color: var(--fail);
+}
+.hm-imp.caution {
+  background: var(--warnbg);
+  color: var(--warn);
+}
+.hm-imp.supports {
+  background: var(--okbg);
+  color: var(--ok);
+}
+.hm-brief {
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 6px;
+}
+.hm-brief .lead {
+  font-size: 14px;
+  line-height: 1.4;
+}
+.hm-brief .fp {
+  font-size: 13px;
+  color: var(--ok);
+  font-weight: 500;
+}
+
+/* research */
+.hm-run {
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 6px;
+}
+.hm-run .rl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.hm-run .rl .rsym {
+  font-family: var(--mono);
+  font-weight: 600;
+}
+.hm-run .rl .nm {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hm-run .rl .chip {
+  margin-left: auto;
+}
+.hm-steps {
+  display: flex;
+  gap: 3px;
+}
+.hm-steps i {
+  flex: 1;
+  height: 5px;
+  border-radius: 2px;
+  background: var(--line2);
+}
+.hm-steps i.done {
+  background: var(--brand-dark);
+}
+.hm-steps i.now {
+  background: var(--brand-dark);
+  opacity: 0.5;
+}
+.hm-spin {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--accentbg);
+  border-top-color: var(--brand-dark);
+  animation: hm-spin 1s linear infinite;
+  flex: 0 0 auto;
+}
+@keyframes hm-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hm-spin {
+    animation: none;
+  }
+}
+.hm-row.rp {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "sym v"
+    "skn v";
+}
+.hm-row.rp .sym {
+  grid-area: sym;
+}
+.hm-row.rp .skn {
+  grid-area: skn;
+  font-size: 12.5px;
+  color: var(--ink2);
+}
+.hm-row.rp .skn small {
+  margin-left: 6px;
+  color: var(--muted);
+}
+.hm-row.rp .v {
+  grid-area: v;
+  text-align: right;
+  display: grid;
+  gap: 3px;
+  justify-items: end;
+}
+/* two columns of reports where the panel spans the page (tablet); one column in the narrow desk and phone columns */
+@media (min-width: 700px) and (max-width: 1099px) {
+  .hm-research .hm-rp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ---------- reminders (Home panel and the page) ---------- */
+.rm-gh {
+  padding: 8px 14px 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+}
+.rm-gh + .hm-row {
+  border-top: 0;
+}
+.hm-row.rm {
+  grid-template-columns: 50px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "d t tag"
+    "d w tag";
+  align-items: start;
+}
+.hm-row.rm .rm-d {
+  grid-area: d;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink2);
+  line-height: 1.25;
+}
+.hm-row.rm .rm-d .big {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.hm-row.rm .rm-t {
+  grid-area: t;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.hm-row.rm .t b {
+  font-family: var(--mono);
+  font-weight: 600;
+}
+.hm-row.rm .rm-w {
+  grid-area: w;
+  font-size: 12.5px;
+  color: var(--ink2);
+  line-height: 1.35;
+}
+.hm-row.rm .tag {
+  grid-area: tag;
+}
+.hm-row.rm.fail {
+  box-shadow: inset 3px 0 0 var(--fail);
+}
+.hm-row.rm.warn {
+  box-shadow: inset 3px 0 0 var(--warn);
+}
+.rm-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--chip);
+  color: var(--ink2);
+  white-space: nowrap;
+}
+.rm-tag.results {
+  background: var(--warnbg);
+  color: var(--warn);
+}
+.rm-tag.expiry {
+  background: var(--bluebg);
+  color: var(--blue);
+}
+.rm-tag.news {
+  background: var(--accentbg);
+  color: var(--title);
+}
+.rm-tag.alert {
+  background: var(--failbg);
+  color: var(--fail);
+}
+.rm-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+.rm-days .rm-day {
+  text-align: center;
+  font: 11px / 1.2 var(--mono);
+  color: var(--muted);
+  padding: 6px 0 4px;
+  border-radius: var(--r-md);
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+.rm-days .rm-day .n {
+  display: block;
+  font-size: 14px;
+  color: var(--ink);
+  font-weight: 600;
+}
+.rm-days .rm-day i {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  margin: 3px 1px 0;
+  background: transparent;
+}
+.rm-days .rm-day i.results {
+  background: var(--warn);
+}
+.rm-days .rm-day i.expiry {
+  background: var(--blue);
+}
+.rm-days .rm-day i.alert {
+  background: var(--fail);
+}
+.rm-days .rm-day i.news {
+  background: var(--brand-dark);
+}
+.rm-days .rm-day.today {
+  border-color: var(--brand);
+  background: var(--accentbg);
+}
+.rm-days .rm-day.weekend {
+  opacity: 0.6;
+}
+@media (min-width: 700px) {
+  .rm-days {
+    grid-template-columns: repeat(14, minmax(0, 1fr));
+  }
+}
+.rm-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.rm-filters button {
+  border: 1px solid var(--line2);
+  background: var(--panel);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.rm-filters button[aria-pressed="true"] {
+  background: var(--accentbg);
+  border-color: var(--brand-dark);
+  color: var(--title);
+}
+.rm-sources {
+  font-size: 12.5px;
+  color: var(--muted);
+  padding: 0 2px;
+}
+
+/* the meters are links to Positions: keep the meter look, not the link look */
+.hm-mk > a {
+  color: inherit;
+  text-decoration: none;
+  min-width: 0;
+}
+
+/* ---------- glance bar (phone and tablet): one figure per module, a tap scrolls to its panel ---------- */
+.hm-glance {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+@media (min-width: 1100px) {
+  .hm-glance {
+    display: none;
+  }
+}
+.hm-tile {
+  appearance: none;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 1px;
+  min-height: 58px;
+  padding: 7px 2px 6px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  cursor: pointer;
+}
+.hm-tile:active {
+  background: var(--panel2);
+}
+.hm-tile .fig {
+  font: 600 21px / 1.1 var(--mono);
+  color: var(--ok);
+}
+.hm-tile .cap {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.hm-tile.warn {
+  background: var(--warnbg);
+  border-color: transparent;
+}
+.hm-tile.warn .fig {
+  color: var(--warn);
+}
+.hm-tile.fail {
+  background: var(--failbg);
+  border-color: transparent;
+}
+.hm-tile.fail .fig {
+  color: var(--fail);
+}
+.hm-tile.quiet .fig {
+  color: var(--muted);
+}
+
+/* a narrow phone keeps only the icon of Run scan in the Puts panel header */
+@media (max-width: 480px) {
+  .hm-mh .btn .lbl {
+    display: none;
+  }
+  .hm-mh .btn.sm {
+    padding: 0 9px;
+  }
+}
+
+/* ---------- Home page grid ----------
+   Phone: one column in reading order, the glance bar under the session card.
+   Tablet (700 px): two columns, panels in a row share a height.
+   Laptop (1100 px): the whole desk in one screen, no page scroll: the session strip on top, then three columns with
+   Puts the tall one; every panel scrolls its rows inside its own box. Keep 1100 in sync with DESK_QUERY in HomePage. */
+.page.home {
+  max-width: none;
+  gap: 12px;
+  grid-template-areas:
+    "sess"
+    "glance"
+    "puts"
+    "leaders"
+    "news"
+    "research"
+    "remind";
+}
+.page.home > .hm-sess {
+  grid-area: sess;
+}
+.page.home > .hm-glance {
+  grid-area: glance;
+}
+.page.home > .hm-puts {
+  grid-area: puts;
+}
+.page.home > .hm-leaders {
+  grid-area: leaders;
+}
+.page.home > .hm-news {
+  grid-area: news;
+}
+.page.home > .hm-research {
+  grid-area: research;
+}
+.page.home > .hm-remind {
+  grid-area: remind;
+}
+@media (min-width: 700px) {
+  .page.home {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "sess sess"
+      "glance glance"
+      "puts remind"
+      "leaders news"
+      "research research";
+    gap: 14px;
+    align-items: stretch;
+  }
+}
+@media (min-width: 1100px) {
+  .page.home {
+    height: 100%;
+    min-height: 640px;
+    padding: 14px 18px;
+    gap: 14px;
+    align-content: stretch;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "sess sess sess"
+      "puts leaders remind"
+      "puts news research";
+  }
+  .page.home > .hm-mod {
+    min-height: 0;
+  }
+  .page.home .hm-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+}
+@media (min-width: 1700px) {
+  .page.home {
+    padding: 18px 28px;
+    gap: 18px;
+  }
+}

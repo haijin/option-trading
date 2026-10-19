@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<rss version="2.0">
+    <channel>
+        <description>Latest Financial News for ^IXIC</description>
+        <item>
+            <description>Sample note: the index slips as Treasury yields climb.</description>
+            <guid isPermaLink="false">ixic-1</guid>
+            <link>https://finance.yahoo.com/markets/stocks/articles/sample-index-slips-100000222.html?.tsrc=rss</link>
+            <pubDate>Mon, 12 Oct 2026 21:00:00 +0000</pubDate>
+            <title>Sample note: index slips as yields climb</title>
+        </item>
+    </channel>
+</rss>

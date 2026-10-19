@@ -1,0 +1,120 @@
+{
+  "legs": [
+    {
+      "id": 0, "srcRows": [1], "lines": [6], "market": "US", "symbol": "AAPL",
+      "openDate": "2026-07-06", "expiry": "2026-08-21", "strike": "310.000000", "multiplier": 100, "contracts": 3,
+      "credit": "1.150000", "closePrice": "0.350000", "openFeesCents": 390, "closeFeesCents": 195,
+      "closeDate": "2026-07-27", "outcome": "closed", "rolledToLeg": null, "spot": "331.400000", "underlyingClose": null,
+      "notes": "closed early at 70% of max profit", "pnlCents": 23415, "pnl": "234.15", "pnlBasis": "cash"
+    },
+    {
+      "id": 1, "srcRows": [2], "lines": [7], "market": "US", "symbol": "AAPL",
+      "openDate": "2026-07-13", "expiry": "2026-08-14", "strike": "300.000000", "multiplier": 100, "contracts": 2,
+      "credit": "2.400000", "closePrice": "0.000000", "openFeesCents": 260, "closeFeesCents": 0,
+      "closeDate": "2026-08-14", "outcome": "expired", "rolledToLeg": null, "spot": null, "underlyingClose": null,
+      "notes": null, "pnlCents": 47740, "pnl": "477.40", "pnlBasis": "cash"
+    },
+    {
+      "id": 2, "srcRows": [3], "lines": [8], "market": "US", "symbol": "MSFT",
+      "openDate": "2026-08-10", "expiry": "2026-09-18", "strike": "420.000000", "multiplier": 100, "contracts": 1,
+      "credit": "4.100000", "closePrice": null, "openFeesCents": 130, "closeFeesCents": 0,
+      "closeDate": "2026-09-18", "outcome": "assigned", "rolledToLeg": null, "spot": "418.750000", "underlyingClose": "411.500000",
+      "notes": "assigned 100 sh @ 420, basis 415.90 after credit", "pnlCents": -44130, "pnl": "-441.30", "pnlBasis": "mtm_at_assignment"
+    },
+    {
+      "id": 3, "srcRows": [4], "lines": [9], "market": "US", "symbol": "NVDA",
+      "openDate": "2026-08-17", "expiry": "2026-09-11", "strike": "170.000000", "multiplier": 100, "contracts": 2,
+      "credit": "3.200000", "closePrice": "5.100000", "openFeesCents": 260, "closeFeesCents": 260,
+      "closeDate": "2026-09-08", "outcome": "rolled", "rolledToLeg": 4, "spot": "176.300000", "underlyingClose": null,
+      "notes": "rolled down and out", "pnlCents": -38520, "pnl": "-385.20", "pnlBasis": "cash"
+    },
+    {
+      "id": 4, "srcRows": [5], "lines": [10], "market": "US", "symbol": "NVDA",
+      "openDate": "2026-09-08", "expiry": "2026-10-02", "strike": "165.000000", "multiplier": 100, "contracts": 2,
+      "credit": "4.400000", "closePrice": "0.900000", "openFeesCents": 260, "closeFeesCents": 260,
+      "closeDate": "2026-09-25", "outcome": "closed", "rolledToLeg": null, "spot": "168.900000", "underlyingClose": null,
+      "notes": null, "pnlCents": 69480, "pnl": "694.80", "pnlBasis": "cash"
+    },
+    {
+      "id": 5, "srcRows": [6, 7, 8], "lines": [11, 12, 13], "market": "US", "symbol": "AAPL",
+      "openDate": "2026-09-14", "expiry": "2026-10-16", "strike": "325.000000", "multiplier": 100, "contracts": 4,
+      "credit": "1.250000", "closePrice": "0.450000", "openFeesCents": 520, "closeFeesCents": 260,
+      "closeDate": "2026-10-05", "outcome": "closed", "rolledToLeg": null, "spot": "338.137500", "underlyingClose": null,
+      "notes": "fill 1 | fill 2 | fill 3", "pnlCents": 31220, "pnl": "312.20", "pnlBasis": "cash"
+    },
+    {
+      "id": 6, "srcRows": [9], "lines": [16], "market": "US", "symbol": "KO",
+      "openDate": "2026-09-01", "expiry": "2026-10-16", "strike": "66.000000", "multiplier": 100, "contracts": 1,
+      "credit": "0.850000", "closePrice": "0.200000", "openFeesCents": 67, "closeFeesCents": 65,
+      "closeDate": "2026-09-22", "outcome": "closed", "rolledToLeg": null, "spot": "68.400000", "underlyingClose": null,
+      "notes": "closed 1 of 3 on 2026-09-22; 2 contracts still open", "pnlCents": 6368, "pnl": "63.68", "pnlBasis": "cash"
+    },
+    {
+      "id": 7, "srcRows": [9], "lines": [16], "market": "US", "symbol": "KO",
+      "openDate": "2026-09-01", "expiry": "2026-10-16", "strike": "66.000000", "multiplier": 100, "contracts": 2,
+      "credit": "0.850000", "closePrice": null, "openFeesCents": 133, "closeFeesCents": 0,
+      "closeDate": null, "outcome": "open", "rolledToLeg": null, "spot": "68.400000", "underlyingClose": null,
+      "notes": "closed 1 of 3 on 2026-09-22; 2 contracts still open", "pnlCents": null, "pnl": null, "pnlBasis": null
+    },
+    {
+      "id": 8, "srcRows": [10], "lines": [17], "market": "HK", "symbol": "0005",
+      "openDate": "2026-07-20", "expiry": "2026-08-28", "strike": "90.000000", "multiplier": 400, "contracts": 3,
+      "credit": "1.450000", "closePrice": "0.350000", "openFeesCents": 4500, "closeFeesCents": 4500,
+      "closeDate": "2026-08-10", "outcome": "closed", "rolledToLeg": null, "spot": "96.400000", "underlyingClose": null,
+      "notes": "HSBC lot 400", "pnlCents": 123000, "pnl": "1230.00", "pnlBasis": "cash"
+    },
+    {
+      "id": 9, "srcRows": [11], "lines": [18], "market": "HK", "symbol": "2318",
+      "openDate": "2026-08-24", "expiry": "2026-09-29", "strike": "56.000000", "multiplier": 500, "contracts": 2,
+      "credit": "1.200000", "closePrice": null, "openFeesCents": 3000, "closeFeesCents": 2500,
+      "closeDate": "2026-09-29", "outcome": "assigned", "rolledToLeg": null, "spot": "54.100000", "underlyingClose": "53.400000",
+      "notes": "assigned, 1000 sh at 56", "pnlCents": -145500, "pnl": "-1455.00", "pnlBasis": "mtm_at_assignment"
+    },
+    {
+      "id": 10, "srcRows": [12], "lines": [19], "market": "HK", "symbol": "0941",
+      "openDate": "2026-09-15", "expiry": "2026-10-29", "strike": "78.000000", "multiplier": 500, "contracts": 1,
+      "credit": "2.100000", "closePrice": "0.650000", "openFeesCents": 553, "closeFeesCents": 550,
+      "closeDate": "2026-10-06", "outcome": "closed", "rolledToLeg": null, "spot": "81.000000", "underlyingClose": null,
+      "notes": "closed 1 of 4", "pnlCents": 71397, "pnl": "713.97", "pnlBasis": "cash"
+    },
+    {
+      "id": 11, "srcRows": [12], "lines": [19], "market": "HK", "symbol": "0941",
+      "openDate": "2026-09-15", "expiry": "2026-10-29", "strike": "78.000000", "multiplier": 500, "contracts": 3,
+      "credit": "2.100000", "closePrice": null, "openFeesCents": 1657, "closeFeesCents": 0,
+      "closeDate": null, "outcome": "open", "rolledToLeg": null, "spot": "81.000000", "underlyingClose": null,
+      "notes": "closed 1 of 4", "pnlCents": null, "pnl": null, "pnlBasis": null
+    },
+    {
+      "id": 12, "srcRows": [13], "lines": [20], "market": "HK", "symbol": "1299",
+      "openDate": "2026-10-05", "expiry": "2026-10-29", "strike": "68.000000", "multiplier": 200, "contracts": 2,
+      "credit": "1.850000", "closePrice": null, "openFeesCents": 3000, "closeFeesCents": 0,
+      "closeDate": null, "outcome": "open", "rolledToLeg": null, "spot": "71.200000", "underlyingClose": null,
+      "notes": "AIA lot 200", "pnlCents": null, "pnl": null, "pnlBasis": null
+    },
+    {
+      "id": 13, "srcRows": [14, 16], "lines": [21, 23], "market": "HK", "symbol": "0700",
+      "openDate": "2026-07-27", "expiry": "2026-08-28", "strike": "460.000000", "multiplier": 100, "contracts": 3,
+      "credit": "6.233333", "closePrice": "11.433333", "openFeesCents": 5700, "closeFeesCents": 5700,
+      "closeDate": "2026-08-20", "outcome": "rolled", "rolledToLeg": 14, "spot": null, "underlyingClose": null,
+      "notes": "rolled out and down", "pnlCents": -167400, "pnl": "-1674.00", "pnlBasis": "cash"
+    },
+    {
+      "id": 14, "srcRows": [15, 17, 18], "lines": [22, 24, 25], "market": "HK", "symbol": "0700",
+      "openDate": "2026-08-20", "expiry": "2026-09-29", "strike": "440.000000", "multiplier": 100, "contracts": 3,
+      "credit": "8.103333", "closePrice": "0.000000", "openFeesCents": 5700, "closeFeesCents": 0,
+      "closeDate": "2026-09-29", "outcome": "expired", "rolledToLeg": null, "spot": "452.133333", "underlyingClose": null,
+      "notes": null, "pnlCents": 237400, "pnl": "2374.00", "pnlBasis": "cash"
+    }
+  ],
+  "totals": [
+    {
+      "market": "US", "legs": 8, "open": 1, "closed": 4, "expired": 1, "assigned": 1, "rolled": 1,
+      "realizedPnlCents": 95573, "realizedPnl": "955.73", "currencyNote": "USD"
+    },
+    {
+      "market": "HK", "legs": 7, "open": 2, "closed": 2, "expired": 1, "assigned": 1, "rolled": 1,
+      "realizedPnlCents": 118897, "realizedPnl": "1188.97", "currencyNote": "HKD"
+    }
+  ],
+  "noSpotLines": [7, 23]
+}

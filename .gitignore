@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+coverage/
+*.log
+.vitest-cache/
+.pg-install.log*
+# AI research reports written by the app (personal, paid output)
+reports/
+# Journal images (personal screenshots, served only through the signed-in API)
+data/journal/

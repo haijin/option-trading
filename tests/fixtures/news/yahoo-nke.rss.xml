@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<rss version="2.0">
+    <channel>
+        <copyright>Sample feed written for the tests; not Yahoo data.</copyright>
+        <description>Latest Financial News for NKE</description>
+        <image>
+            <height>45</height>
+            <link>http://example.com/q/h?s=NKE</link>
+            <title>Sample feed: NKE News</title>
+            <url>https://example.com/sample-feed-logo.png</url>
+            <width>144</width>
+        </image>
+        <item>
+            <description>A sample piece on how a digital plan could lift direct sales while online demand softens and costs rise.</description>
+            <guid isPermaLink="false">62ce23ea-6d7d-30c6-98aa-2f36a55e6536</guid>
+            <link>https://finance.yahoo.com/markets/stocks/articles/sample-nike-digital-plan-145200070.html?.tsrc=rss</link>
+            <pubDate>Mon, 12 Oct 2026 14:52:00 +0000</pubDate>
+            <title>NIKE's Sample Digital Plan: Competitive Edge or Cost Burden?</title>
+        </item>
+        <item>
+            <description>A sample earnings preview: estimates rise across sectors while surging Treasury yields pressure banks.</description>
+            <guid isPermaLink="false">4a79d7a5-c3f9-3062-8c55-31377f988626</guid>
+            <link>https://finance.yahoo.com/markets/stocks/articles/sample-earnings-preview-115000990.html?.tsrc=rss</link>
+            <pubDate>Mon, 12 Oct 2026 11:50:00 +0000</pubDate>
+            <title>Sample Bank, Example Foods and Nike are part of the Acme Research Earnings Preview</title>
+        </item>
+        <item>
+            <description><![CDATA[Nike &amp; Converse: buyback pace <b>slows</b> as inventories fall.]]></description>
+            <guid isPermaLink="false">92f9471f-f963-3c0a-bb60-aa6a2b3a0a8a</guid>
+            <link>https://finance.yahoo.com/markets/stocks/articles/nike-buyback-pace-slows-070934218.html?.tsrc=rss&amp;utm_source=feed#top</link>
+            <pubDate>Mon, 12 Oct 2026 07:09:34 +0000</pubDate>
+            <title><![CDATA[Nike &amp; Converse: buyback pace slows]]></title>
+        </item>
+        <item>
+            <description>Same story again, without the tracking parameter.</description>
+            <guid isPermaLink="false">dup-1</guid>
+            <link>https://finance.yahoo.com/markets/stocks/articles/nike-buyback-pace-slows-070934218.html</link>
+            <pubDate>Mon, 12 Oct 2026 07:09:34 +0000</pubDate>
+            <title>Nike &amp; Converse: buyback pace slows</title>
+        </item>
+        <item>
+            <description>An item whose date is missing is dated when it was first seen.</description>
+            <guid isPermaLink="false">nodate-1</guid>
+            <link>https://finance.yahoo.com/markets/stocks/articles/nike-undated-1.html</link>
+            <title>Undated Nike item</title>
+        </item>
+    </channel>
+</rss>

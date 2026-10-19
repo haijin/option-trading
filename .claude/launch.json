@@ -1,0 +1,29 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "mock-api",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["exec", "tsx", "web/mock/server.ts"],
+      "port": 4318
+    },
+    {
+      "name": "web-dev",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["web:dev"],
+      "port": 5173
+    },
+    {
+      "name": "mock-api-4318",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "set MOCK_PORT=4318&& set MOCK_AI_DELAY_MS=4000&& pnpm exec tsx web/mock/server.ts"],
+      "port": 4318
+    },
+    {
+      "name": "web-dev-mock",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "set API_TARGET=http://127.0.0.1:4318&& pnpm web:dev"],
+      "port": 5173
+    }
+  ]
+}
