@@ -31,7 +31,9 @@ export function requestKey(method: string, rawUrl: string): string {
   const kept = [...u.searchParams.entries()]
     .filter(([k]) => !DROPPED_PARAMS.has(k))
     .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
-  return `${method.toUpperCase()} ${u.pathname}?${kept.map(([k, v]) => `${k}=${v}`).join('&')}`;
+  // Node 24 writes "^" in a URL path as %5E, Node 22 leaves it raw; the recorded fixtures use %5E (index symbols such as ^VIX).
+  const path = u.pathname.replace(/\^/g, '%5E');
+  return `${method.toUpperCase()} ${path}?${kept.map(([k, v]) => `${k}=${v}`).join('&')}`;
 }
 
 export function fixtureFileName(key: string): string {

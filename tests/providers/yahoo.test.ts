@@ -48,6 +48,20 @@ describe('replay fetch', () => {
     ).toContain('date=1792713600');
   });
 
+  it('writes an index symbol the same way on every Node version: ^VIX and %5EVIX give one key', () => {
+    // Node 22 keeps a raw "^" in the URL path where Node 24 encodes it; the recorded fixtures use %5E.
+    const raw = requestKey(
+      'GET',
+      'https://query2.finance.yahoo.com/v8/finance/chart/^VIX?interval=1d&period1=1&period2=2',
+    );
+    const encoded = requestKey(
+      'GET',
+      'https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&period2=9&period1=3',
+    );
+    expect(raw).toBe('GET /v8/finance/chart/%5EVIX?interval=1d');
+    expect(encoded).toBe(raw);
+  });
+
   it('never falls through to the network: an unrecorded request throws', async () => {
     const f = createReplayFetch(BASE);
     await expect(f('https://query2.finance.yahoo.com/v8/finance/chart/ZZZZ?interval=1d')).rejects.toBeInstanceOf(
