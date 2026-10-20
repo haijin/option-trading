@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/haijin/option-trading/security/advisories/new
+    about: Use a private advisory, not a public issue. See SECURITY.md.

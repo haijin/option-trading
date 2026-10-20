@@ -129,7 +129,7 @@ src/core         领域类型、港美日历、合约规格、提醒与告警规
 src/indicators   技术指标、波动率估计、Black-Scholes、隐含波动率
 src/skills       分析技能 S0 到 S8、注册表与流水线运行器（纯函数；只读截至某日的数据）
 src/valuation    内在价值、KPI、质量筛选
-src/providers    Yahoo、Futu OpenD、CSV、新闻与指数成分股适配器（只有命令行和定时任务可以导入）
+src/providers    Yahoo、Futu OpenD、CSV、新闻与指数成分股适配器（只有命令行、服务端和定时任务可以导入）
 src/backtest     回放引擎、合成期权定价器（Barone-Adesi-Whaley）、指标
 src/leaders      Leaders 页面的选 Put 与视图辅助
 src/journal      日记结构、模板、衍生字段与 AI 改写规则
@@ -165,7 +165,7 @@ web/             React 19 + Vite 界面（手机优先；web/mock 是模拟 API�
 服务只监听 `127.0.0.1`，拒绝 `Host` 不是本机的请求，拒绝跨源的浏览器请求，写操作要求 `Content-Type: application/json`，
 所有数据接口都要求已登录的会话。登录方式有密码（scrypt）、Google，或一次性邮件链接。没有反向代理、`APP_URL` 和
 事先创建好的账号，请不要把它暴露到公网；`OT_AUTH=off` 只适用于没有其他人能访问的机器。仓库中不存放任何密钥
-（`.env` 已被 git 忽略；请复制 `.env.example`）。如需报告安全漏洞，请使用本仓库的 GitHub 私密安全公告，而不是公开 issue。
+（`.env` 已被 git 忽略；请复制 `.env.example`）。如需报告安全漏洞，请使用本仓库的 GitHub 私密安全公告，而不是公开 issue，详见 [SECURITY.md](SECURITY.md)（英文）。
 
 ## 数据与法律说明
 
@@ -175,7 +175,8 @@ web/             React 19 + Vite 界面（手机优先；web/mock 是模拟 API�
   供你自己使用；请勿再分发拉取到的数据。`tests/fixtures/http/` 中是裁剪后的录制响应，仅用于让测试离线运行，如有要求会移除。
 - **指数成分列表。** [data/universe-us.csv](data/universe-us.csv) 和 [data/universe-hk.csv](data/universe-hk.csv) 编译自公开来源，
   包括 Wikipedia（CC BY-SA 4.0）以及恒生和港交所的公开名单。依赖任何一只股票前请自行核实。
-  `data/hk-board-lots.csv` 中的港股期权合约规模会随时间变化：请向券商或港交所核对。
+  `data/hk-board-lots.csv` 中的港股期权合约规模会随时间变化：请向券商或港交所核对。三个数据文件的来源和许可见
+  [data/README.md](data/README.md)（英文）。
 - **改编文本。** `src/server/research/knowledge/` 改编了
   [himself65/trade-skills](https://github.com/himself65/trade-skills) 的十条要点（其 README 声明为 MIT 许可），详见该目录下的 `LICENSE.md`。
 - **AI 提示词。** 研究技能在运行时读取你自己克隆的 [ai-berkshire](https://github.com/xbtlin/ai-berkshire)（MIT）中的提示词，
@@ -184,7 +185,7 @@ web/             React 19 + Vite 界面（手机优先；web/mock 是模拟 API�
 ## 参与贡献
 
 欢迎提 issue：程序缺陷、失效的数据源、港股合约规格的更正。这是个人项目，写大型 Pull Request 之前请先开 issue，
-回复可能较慢。
+回复可能较慢。Pull Request 必须通过的检查和代码依赖的规则见 [CONTRIBUTING.md](CONTRIBUTING.md)（英文）。
 
 ## 许可证
 

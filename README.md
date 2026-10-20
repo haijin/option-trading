@@ -136,7 +136,7 @@ src/core         domain types, HK / US calendars, contract specs, alert and remi
 src/indicators   technical indicators, volatility estimators, Black-Scholes, implied volatility
 src/skills       the analysis skills S0 to S8, their registry and the pipeline runner (pure; as-of data only)
 src/valuation    intrinsic value, KPIs, quality screen
-src/providers    Yahoo, Futu OpenD, CSV, news and index-universe adapters (only the CLI and jobs may import them)
+src/providers    Yahoo, Futu OpenD, CSV, news and index-universe adapters (only the CLI, the server and the jobs may import them)
 src/backtest     replay engine, synthetic option pricer (Barone-Adesi-Whaley), metrics
 src/leaders      put selection and view helpers for the Leaders page
 src/journal      diary schema, templates, derived fields and the AI rewrite rules
@@ -176,7 +176,7 @@ requires `Content-Type: application/json` on writes, and requires a signed-in se
 password (scrypt), Google, or a one-time email link. Do not expose it to the internet without a reverse proxy, `APP_URL` and an
 account you created first; `OT_AUTH=off` is only for a machine nobody else can reach. No secret is stored in the repository
 (`.env` is git-ignored; copy `.env.example`). To report a vulnerability, please use GitHub's private security advisory for this
-repository instead of a public issue.
+repository instead of a public issue; see [SECURITY.md](SECURITY.md).
 
 ## Data and legal notes
 
@@ -187,7 +187,8 @@ repository instead of a public issue.
   recorded responses that exist only so the tests run offline; they will be removed on request.
 - **Index lists.** [data/universe-us.csv](data/universe-us.csv) and [data/universe-hk.csv](data/universe-hk.csv) are compiled from
   public sources, including Wikipedia (CC BY-SA 4.0) and public Hang Seng and HKEX lists. Verify any name before relying on it.
-  HK option contract sizes in `data/hk-board-lots.csv` change over time: check them with your broker or HKEX.
+  HK option contract sizes in `data/hk-board-lots.csv` change over time: check them with your broker or HKEX. Sources and licensing of
+  the three files are in [data/README.md](data/README.md).
 - **Adapted text.** `src/server/research/knowledge/` adapts ten pitfalls from
   [himself65/trade-skills](https://github.com/himself65/trade-skills) (MIT, as stated in its README); see the `LICENSE.md` in that
   folder.
@@ -197,7 +198,8 @@ repository instead of a public issue.
 ## Contributing
 
 Issues are welcome: bugs, data sources that stopped working, and corrections to the HK contract specifications. This is a personal
-project, so open an issue before you write a large pull request, and expect slow replies.
+project, so open an issue before you write a large pull request, and expect slow replies. The checks a pull request must pass and
+the rules the code depends on are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

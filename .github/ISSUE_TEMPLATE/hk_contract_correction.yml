@@ -1,0 +1,40 @@
+name: Hong Kong contract specification correction
+description: A name's option contract size or stock board lot in the data files is wrong or out of date.
+title: "[hk contract] "
+labels: ["hk-contract"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The option contract size (shares per contract) is not always the stock board lot, and both change over time. A correction needs
+        evidence from HKEX or a broker screen. See `data/README.md` for how the files are built.
+  - type: input
+    id: stock
+    attributes:
+      label: Stock code and name
+      placeholder: 0700 Tencent Holdings
+    validations:
+      required: true
+  - type: input
+    id: contract-size
+    attributes:
+      label: Correct option contract size (shares per contract)
+    validations:
+      required: true
+  - type: input
+    id: board-lot
+    attributes:
+      label: Correct stock board lot (shares per lot)
+      description: Leave empty if only the option contract size is wrong.
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: A link to the HKEX contract specifications or the stock's page, or what your broker or OpenD shows, and the date you looked.
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: What the repository has today
+      description: The line from `data/hk-board-lots.csv` or `data/universe-hk.csv`.

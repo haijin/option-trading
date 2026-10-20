@@ -1,0 +1,49 @@
+name: A data source stopped working
+description: Yahoo, OpenD, HKEX, Hang Seng Indexes, Wikipedia or a news feed changed or went away.
+title: "[data source] "
+labels: ["data-source"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Free data sources change without notice. Tell us which one broke and what it returns now. **Do not paste API keys, cookies or your
+        own account data.**
+  - type: dropdown
+    id: source
+    attributes:
+      label: Source
+      options:
+        - Yahoo Finance (prices, fundamentals, chains, earnings dates, FX)
+        - moomoo / Futu OpenD
+        - HKEXnews or the HKEX securities list
+        - Hang Seng Indexes (constituents)
+        - Wikipedia (index constituents)
+        - CNBC or Yahoo news feeds
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: symptom
+    attributes:
+      label: What you see
+      description: The command or page, the error text, and what changed compared with before.
+    validations:
+      required: true
+  - type: input
+    id: first-seen
+    attributes:
+      label: When it started
+      description: The date you first noticed it.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The commit hash or tag.
+    validations:
+      required: true
+  - type: textarea
+    id: response
+    attributes:
+      label: A sample of the new response (optional)
+      description: A few lines of the response or page that now differs, with anything personal removed.
+      render: text
